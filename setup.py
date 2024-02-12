@@ -3,7 +3,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='deolingo',
-    version='0.0.0',
+    version='0.0.1',
     packages=find_packages(),
     install_requires=[
         'clingo>=5.6.0'
