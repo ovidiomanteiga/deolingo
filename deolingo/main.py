@@ -3,11 +3,22 @@ import sys
 import clingo
 import clingo.ast as ast
 from typing import Callable
+from clingo.ast import Transformer, Variable, parse_string, SymbolicAtom, ProgramBuilder
 
 
 ex0 = """
+%&forbidden{smoke;kk}.
+&forbidden{smoke}.
+%&forbidden{-smoke}.
+a :- &forbidden{smoke;kk}, p.
+%b :- &obligatory{exercise;ff}, q.
+%a1 :- &not_forbidden{smoke}, p.
+%b2 :- &not_obligatory{exercise}, q.
+"""
+
+ex0_0 = """
 %&forbidden{-exercise}.
-&not_forbidden{exercise}.
+%&not_forbidden{exercise}.
 %&obligatory{exercise}.
 %&forbidden{smoke}.
 %&obligatory{-smoke}.
@@ -23,7 +34,7 @@ park :- not &forbidden{park}.
 
 ex2 = """
 &obligatory{work} :- not &not_obligatory{work}.
-&not_obligatory(work) :- weekend.
+&not_obligatory{work} :- weekend.
 -weekend.
 -work.
 """
@@ -66,46 +77,86 @@ deolingo_theory = """
 """
 
 
-def deontic_transform(ctl, prog=ex0):
+class DeonticTransformer(Transformer):
+
+    def map_deontic_atoms(self, sequence):
+        new_sequence = []
+        if not sequence:
+            return sequence
+        for lit in sequence:
+            if lit.ast_type != ast.ASTType.Literal:
+                new_sequence.append(lit)
+                continue
+            if lit.atom.ast_type == ast.ASTType.TheoryAtom and lit.atom.term.name in ["forbidden", "obligatory", "not_forbidden", "not_obligatory"]:
+                is_negated = lit.atom.term.name in ["not_forbidden", "not_obligatory"]                    
+                for el in lit.atom.elements:
+                    is_obligatory = lit.atom.term.name in ["obligatory", "not_obligatory"]
+                    new_name = "obligatory" if is_obligatory else "forbidden"
+                    new_name = ("-" if is_negated else "") + "_deolingo_" + new_name
+                    new_atom = ast.SymbolicAtom(ast.Function(lit.atom.term.location, new_name, el.terms, False))
+                    new_lit = ast.Literal(lit.location, lit.sign, new_atom)
+                    new_sequence.append(new_lit)
+            else:
+                new_sequence.append(lit)
+        return new_sequence
+
+    def visit_sequence(self, sequence):
+        return self.map_deontic_atoms(sequence)
+
+    def visit_TheoryAtom(self, atom):
+        if atom.term.name in ["forbidden", "obligatory", "not_forbidden", "not_obligatory"]:
+            is_negated = atom.term.name in ["not_forbidden", "not_obligatory"] 
+            is_obligatory = atom.term.name in ["obligatory", "not_obligatory"]
+            new_name = "obligatory" if is_obligatory else "forbidden"
+            if len(atom.elements) == 1:                   
+                new_name = ("-" if is_negated else "") + "_deolingo_" + new_name
+                new_atom = ast.Literal(atom.term.location, ast.Sign.NoSign, ast.SymbolicAtom(ast.Function(atom.term.location, new_name, atom.elements[0].terms, False)))
+                return new_atom
+        return atom
+
+
+def deontic_transform(ctl, prog=ex5):
     ctl.configuration.solve.models = 0
     prog += deolingo_theory
-    prog += "_deolingo_violation(X) :- _deolingo_obligatory(X), -_deolingo_holds(X)."
-    prog += "_deolingo_violation(X) :- _deolingo_forbidden(X), _deolingo_holds(X)."
-    prog += "_deolingo_fulfilled(X) :- _deolingo_obligatory(X), _deolingo_holds(X)."
-    prog += "_deolingo_fulfilled(X) :- _deolingo_forbidden(X), -_deolingo_holds(X)."
-    prog += "_deolingo_obligatory(X) :- _deolingo_forbidden(-X)."
-    prog += "_deolingo_forbidden(X) :- _deolingo_obligatory(-X)."
-    prog += "_deolingo_implicit_permission(X) :- not _deolingo_forbidden(X), _deolingo_deontic(X)."
-    prog += "_deolingo_explicit_permission(X) :- -_deolingo_forbidden(X), _deolingo_deontic(X)."
-    prog += ":- _deolingo_obligatory(X), _deolingo_forbidden(X), not _deolingo_holds(X), not -_deolingo_holds(X)."
-    ctl.add("base", [], prog)
+    #ctl.add("base", [], prog)
     # Ground the program
-    ctl.ground([("base", [])])
-    # Access parsed AST of the program to add rules for the deontic operators
-    for theory_atom in ctl.theory_atoms:
-        is_deontic = False
-        theory_atom_name = theory_atom.term.name
-        for theory_atom_element in theory_atom.elements:
-            for theory_atom_element_term in theory_atom_element.terms:
-                is_negated = theory_atom_element_term.name == "-"
-                theory_atom_element_term_name = theory_atom_element_term.arguments[0].name if is_negated else theory_atom_element_term.name
-                if theory_atom_name == "obligatory":
-                    ctl.add("base", [], f"_deolingo_obligatory({theory_atom_element_term}).")
-                    is_deontic = True
-                elif theory_atom_name == "forbidden":
-                    ctl.add("base", [], f"_deolingo_forbidden({theory_atom_element_term}).")
-                    is_deontic = True
-                elif theory_atom_name == "not_obligatory":
-                    ctl.add("base", [], f"-_deolingo_obligatory({theory_atom_element_term}).")
-                    is_deontic = True
-                elif theory_atom_name == "not_forbidden":
-                    ctl.add("base", [], f"-_deolingo_forbidden({theory_atom_element_term}).")
-                    is_deontic = True
-                if is_deontic:
-                    #ctl.add("base", [], f":- _deolingo_obligatory_({theory_atom_element_term_name}), _deolingo_forbidden_({theory_atom_element_term_name}), not {theory_atom_element_term_name}, not -{theory_atom_element_term_name}.")
-                    ctl.add("base", [], f"_deolingo_holds({theory_atom_element_term_name}) :- {theory_atom_element_term_name}.")
-                    ctl.add("base", [], f"-_deolingo_holds({theory_atom_element_term_name}) :- -{theory_atom_element_term_name}.")
-                    ctl.add("base", [], f"_deolingo_deontic({theory_atom_element_term_name}).")
+    #ctl.ground([("base", [])])
+    def callback(bld, stm):
+        tstm = dt(stm)
+        print(str(tstm))
+        bld.add(tstm)   
+    with ProgramBuilder(ctl) as bld:
+        ctl2 = clingo.Control()
+        ctl2.add("base", [], prog)
+        ctl2.ground([("base", [])])
+        # Access parsed AST of the program to add rules for the deontic operators
+        for theory_atom in ctl2.theory_atoms:
+            is_deontic = False
+            theory_atom_name = theory_atom.term.name
+            for theory_atom_element in theory_atom.elements:
+                for theory_atom_element_term in theory_atom_element.terms:
+                    is_negated = theory_atom_element_term.name == "-"
+                    theory_atom_element_term_name = theory_atom_element_term.arguments[0].name if is_negated else theory_atom_element_term.name
+                    is_deontic = theory_atom_name in ["obligatory", "forbidden", "not_obligatory", "not_forbidden"]
+                    if is_deontic:
+                        #ctl.add("base", [], f":- _deolingo_obligatory_({theory_atom_element_term_name}), _deolingo_forbidden_({theory_atom_element_term_name}), not {theory_atom_element_term_name}, not -{theory_atom_element_term_name}.")
+                        parse_string(f"_deolingo_holds({theory_atom_element_term_name}) :- {theory_atom_element_term_name}.", bld.add)
+                        parse_string(f"-_deolingo_holds({theory_atom_element_term_name}) :- -{theory_atom_element_term_name}.", bld.add)
+                        parse_string(f"_deolingo_deontic({theory_atom_element_term_name}).", bld.add)
+        dt = DeonticTransformer()
+        parse_string(prog, lambda stm: callback(bld, stm))
+        nprog = """
+        _deolingo_violation(X) :- _deolingo_obligatory(X), -_deolingo_holds(X).
+        _deolingo_violation(X) :- _deolingo_forbidden(X), _deolingo_holds(X).
+        _deolingo_fulfilled(X) :- _deolingo_obligatory(X), _deolingo_holds(X).
+        _deolingo_fulfilled(X) :- _deolingo_forbidden(X), -_deolingo_holds(X).
+        %_deolingo_obligatory(X) :- _deolingo_forbidden(-X).
+        %_deolingo_forbidden(X) :- _deolingo_obligatory(-X).
+        _deolingo_implicit_permission(X) :- not _deolingo_forbidden(X), _deolingo_deontic(X).
+        _deolingo_explicit_permission(X) :- -_deolingo_forbidden(X), _deolingo_deontic(X).
+        :- _deolingo_obligatory(X), _deolingo_forbidden(X), not _deolingo_holds(X), not -_deolingo_holds(X).
+        """
+        parse_string(nprog, bld.add)
     # Ground the program again after adding deontic rules
     ctl.ground([("base", [])])
 
@@ -139,7 +190,7 @@ class DeolingoApplication(clingo.Application):
         See clingo.clingo_main().
         """
         self.program_name = "deolingo"
-        self.version = "0.0.1'"
+        self.version = "0.0.2"
 
 
     def print_model(self, model: clingo.Model, printer: Callable[[], None] = None):
