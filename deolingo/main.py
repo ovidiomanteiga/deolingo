@@ -183,9 +183,9 @@ def run_deolingo(prog, all_models=False):
 
 def read_examples():
     """
-    Returns a list of all examples reading from folders in ../examples
+    Returns a list of all examples reading from folders in /examples
     """
-    examples_folder = Path(__file__).parent / "../examples"
+    examples_folder = Path(__file__).parent / "examples"
     folders = [f for f in listdir(examples_folder) if isdir(join(examples_folder, f))]
     examples_files = []
     for folder in folders:
@@ -196,7 +196,7 @@ def read_examples():
     files = [(name(f), open(f)) for f in examples_files]
     examples = [(f[0],f[1].read()) for f in files]
     return examples
-    
+
 
 def main():
     """

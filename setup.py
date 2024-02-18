@@ -5,6 +5,7 @@ setup(
     name='deolingo',
     version='0.0.3',
     packages=find_packages(),
+    include_package_data=True,
     install_requires=[
         'clingo>=5.6.0',
         'clingox>=1.2.0'
