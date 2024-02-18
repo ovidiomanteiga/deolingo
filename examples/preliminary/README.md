@@ -1,0 +1,1 @@
+The examples in this folder are taken from "A Preliminary Study on Deontic Answer Set Programming", see https://www.dc.fi.udc.es/~cabalar/ACLAI22/Cabalar-deontic.pdf

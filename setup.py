@@ -3,10 +3,11 @@ from setuptools import setup, find_packages
 
 setup(
     name='deolingo',
-    version='0.0.2',
+    version='0.0.3',
     packages=find_packages(),
     install_requires=[
-        'clingo>=5.6.0'
+        'clingo>=5.6.0',
+        'clingox>=1.2.0'
     ],
     entry_points={
         'console_scripts': [

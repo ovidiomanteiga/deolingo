@@ -4,62 +4,13 @@ import clingo
 import clingo.ast as ast
 from typing import Callable
 from clingo.ast import Transformer, Variable, parse_string, SymbolicAtom, ProgramBuilder
+from clingox.ast import theory_term_to_literal
+import clingox as clx
+from clingox.pprint import PrettyPrinter
+from os import listdir
+from os.path import isfile, join, isdir
+from pathlib import Path
 
-
-ex0 = """
-%&forbidden{smoke;kk}.
-&forbidden{smoke}.
-%&forbidden{-smoke}.
-a :- &forbidden{smoke;kk}, p.
-%b :- &obligatory{exercise;ff}, q.
-%a1 :- &not_forbidden{smoke}, p.
-%b2 :- &not_obligatory{exercise}, q.
-"""
-
-ex0_0 = """
-%&forbidden{-exercise}.
-%&not_forbidden{exercise}.
-%&obligatory{exercise}.
-%&forbidden{smoke}.
-%&obligatory{-smoke}.
-%&obligatory{-smoke; exercise}.
-%&forbidden{smoke; -exercise}.
-%-exercise.
-%smoke.
-"""
-
-ex1 = """
-park :- not &forbidden{park}.
-"""
-
-ex2 = """
-&obligatory{work} :- not &not_obligatory{work}.
-&not_obligatory{work} :- weekend.
--weekend.
--work.
-"""
-
-ex3 = """
-&obligatory{fight}.
-&forbidden{fight}.
-"""
-
-ex4 = """
-&forbidden{walk}.
-&obligatory{walk_right} :- walk.
-walk :- walk_right.
-&obligatory{walk} :- &obligatory{walk_right}.
-walk.
-walk_right.
-"""
-
-ex5 = """
-&forbidden{fence} :- not &not_forbidden{fence}.
-&obligatory{white} :- fence.%, &forbidden{fence}.
-&not_forbidden{fence} :- sea.
-fence.
-sea.
-"""
 
 deolingo_theory = """
 #theory deo {
@@ -69,96 +20,83 @@ deolingo_theory = """
         ~ : 3, unary;
         | : 1, binary, left
     };
-    &obligatory/0 : deontic_term, any;
-    &forbidden/0 : deontic_term, any;
-    &not_obligatory/0 : deontic_term, any;
-    &not_forbidden/0 : deontic_term, any
+    &ob/0 : deontic_term, any;
+    &fb/0 : deontic_term, any;
+    &nob/0 : deontic_term, any;
+    &nfb/0 : deontic_term, any
 }.
 """
+
+deontic_theory_atoms = ["ob", "fb", "nob", "nfb"]
+deontic_theory_atoms_obligation = ["ob", "nob"]
+deontic_theory_atoms_negation = ["nob", "nfb"]
 
 
 class DeonticTransformer(Transformer):
 
-    def map_deontic_atoms(self, sequence):
-        new_sequence = []
-        if not sequence:
-            return sequence
-        for lit in sequence:
-            if lit.ast_type != ast.ASTType.Literal:
-                new_sequence.append(lit)
-                continue
-            if lit.atom.ast_type == ast.ASTType.TheoryAtom and lit.atom.term.name in ["forbidden", "obligatory", "not_forbidden", "not_obligatory"]:
-                is_negated = lit.atom.term.name in ["not_forbidden", "not_obligatory"]                    
-                for el in lit.atom.elements:
-                    is_obligatory = lit.atom.term.name in ["obligatory", "not_obligatory"]
-                    new_name = "obligatory" if is_obligatory else "forbidden"
-                    new_name = ("-" if is_negated else "") + "_deolingo_" + new_name
-                    new_atom = ast.SymbolicAtom(ast.Function(lit.atom.term.location, new_name, el.terms, False))
-                    new_lit = ast.Literal(lit.location, lit.sign, new_atom)
-                    new_sequence.append(new_lit)
-            else:
-                new_sequence.append(lit)
-        return new_sequence
+    def __init__(self):
+        super().__init__()
+        self.deontic_atoms = set()
 
-    def visit_sequence(self, sequence):
-        return self.map_deontic_atoms(sequence)
-
-    def visit_TheoryAtom(self, atom):
-        if atom.term.name in ["forbidden", "obligatory", "not_forbidden", "not_obligatory"]:
-            is_negated = atom.term.name in ["not_forbidden", "not_obligatory"] 
-            is_obligatory = atom.term.name in ["obligatory", "not_obligatory"]
-            new_name = "obligatory" if is_obligatory else "forbidden"
+    def map_deontic_atom(self, atom, as_literal=False):
+        if atom.term.name in deontic_theory_atoms:
+            is_negated = atom.term.name in deontic_theory_atoms_negation
+            is_obligatory = atom.term.name in deontic_theory_atoms_obligation
+            new_name = "ob" if is_obligatory else "fb"
             if len(atom.elements) == 1:                   
                 new_name = ("-" if is_negated else "") + "_deolingo_" + new_name
-                new_atom = ast.Literal(atom.term.location, ast.Sign.NoSign, ast.SymbolicAtom(ast.Function(atom.term.location, new_name, atom.elements[0].terms, False)))
+                new_terms = [clx.ast.theory_term_to_term(tterm) for tterm in atom.elements[0].terms]
+                new_atom =  ast.SymbolicAtom(ast.Function(atom.term.location, new_name, new_terms, False))
+                if as_literal:
+                    new_atom = ast.Literal(atom.term.location, ast.Sign.NoSign, new_atom)
+                deontic_term = new_terms[0]
+                if deontic_term.ast_type != ast.ASTType.Variable:
+                    dt_name = str(deontic_term)
+                    dt_is_negated = dt_name.startswith("-")
+                    dt_name = dt_name[1:] if dt_is_negated else dt_name
+                    self.deontic_atoms.add(dt_name)
                 return new_atom
         return atom
 
+    def visit_Rule(self, rule):
+        new_head = rule.head
+        if rule.head is not None:
+            if rule.head.ast_type == ast.ASTType.TheoryAtom:
+                new_head = self.map_deontic_atom(rule.head, as_literal=True)
+            new_head = self(new_head)
+        new_body = rule.body
+        if rule.body is not None:
+            new_body = self.visit_sequence(rule.body)
+        return ast.Rule(rule.location, new_head, new_body)
 
-def deontic_transform(ctl, prog=ex5):
-    ctl.configuration.solve.models = 0
-    prog += deolingo_theory
-    #ctl.add("base", [], prog)
-    # Ground the program
-    #ctl.ground([("base", [])])
-    def callback(bld, stm):
+    def visit_TheoryAtom(self, atom):
+        return self.map_deontic_atom(atom)
+
+
+def deontic_transform(inputs, callback):
+    inputs.insert(0, deolingo_theory)
+    dt = DeonticTransformer()
+    def int_callback(stm):
         tstm = dt(stm)
-        print(str(tstm))
-        bld.add(tstm)   
-    with ProgramBuilder(ctl) as bld:
-        ctl2 = clingo.Control()
-        ctl2.add("base", [], prog)
-        ctl2.ground([("base", [])])
-        # Access parsed AST of the program to add rules for the deontic operators
-        for theory_atom in ctl2.theory_atoms:
-            is_deontic = False
-            theory_atom_name = theory_atom.term.name
-            for theory_atom_element in theory_atom.elements:
-                for theory_atom_element_term in theory_atom_element.terms:
-                    is_negated = theory_atom_element_term.name == "-"
-                    theory_atom_element_term_name = theory_atom_element_term.arguments[0].name if is_negated else theory_atom_element_term.name
-                    is_deontic = theory_atom_name in ["obligatory", "forbidden", "not_obligatory", "not_forbidden"]
-                    if is_deontic:
-                        #ctl.add("base", [], f":- _deolingo_obligatory_({theory_atom_element_term_name}), _deolingo_forbidden_({theory_atom_element_term_name}), not {theory_atom_element_term_name}, not -{theory_atom_element_term_name}.")
-                        parse_string(f"_deolingo_holds({theory_atom_element_term_name}) :- {theory_atom_element_term_name}.", bld.add)
-                        parse_string(f"-_deolingo_holds({theory_atom_element_term_name}) :- -{theory_atom_element_term_name}.", bld.add)
-                        parse_string(f"_deolingo_deontic({theory_atom_element_term_name}).", bld.add)
-        dt = DeonticTransformer()
-        parse_string(prog, lambda stm: callback(bld, stm))
-        nprog = """
-        _deolingo_violation(X) :- _deolingo_obligatory(X), -_deolingo_holds(X).
-        _deolingo_violation(X) :- _deolingo_forbidden(X), _deolingo_holds(X).
-        _deolingo_fulfilled(X) :- _deolingo_obligatory(X), _deolingo_holds(X).
-        _deolingo_fulfilled(X) :- _deolingo_forbidden(X), -_deolingo_holds(X).
-        %_deolingo_obligatory(X) :- _deolingo_forbidden(-X).
-        %_deolingo_forbidden(X) :- _deolingo_obligatory(-X).
-        _deolingo_implicit_permission(X) :- not _deolingo_forbidden(X), _deolingo_deontic(X).
-        _deolingo_explicit_permission(X) :- -_deolingo_forbidden(X), _deolingo_deontic(X).
-        :- _deolingo_obligatory(X), _deolingo_forbidden(X), not _deolingo_holds(X), not -_deolingo_holds(X).
-        """
-        parse_string(nprog, bld.add)
-    # Ground the program again after adding deontic rules
-    ctl.ground([("base", [])])
+        callback(tstm)   
+    for input in inputs:
+        parse_string(input, int_callback)
+    for da in dt.deontic_atoms:
+        parse_string(f"_deolingo_holds({da}) :- {da}.", callback)
+        parse_string(f"_deolingo_holds(-{da}) :- -{da}.", callback)
+        parse_string(f"_deolingo_deontic({da}).", callback)
+    nprog = """
+    _deolingo_violation(X) :- _deolingo_ob(X), _deolingo_holds(-X).
+    _deolingo_violation(X) :- _deolingo_fb(X), _deolingo_holds(X).
+    _deolingo_fulfilled(X) :- _deolingo_ob(X), _deolingo_holds(X).
+    _deolingo_fulfilled(X) :- _deolingo_fb(X), _deolingo_holds(-X).
+    _deolingo_ob(X) :- _deolingo_fb(-X).
+    _deolingo_fb(X) :- _deolingo_ob(-X).
+    _deolingo_implicit_permission(X) :- not _deolingo_fb(X), _deolingo_deontic(X).
+    _deolingo_explicit_permission(X) :- -_deolingo_fb(X), _deolingo_deontic(X).
+    :- _deolingo_ob(X), _deolingo_fb(X), not _deolingo_holds(X), not _deolingo_holds(-X).
+    """
+    parse_string(nprog, callback)
 
 
 def rewrite_atoms(atoms):
@@ -170,7 +108,7 @@ def rewrite_atoms(atoms):
         str_atom = str(atom)
         if "_deolingo_deontic" in str_atom or "_deolingo_holds" in str_atom:
             continue
-        elif str_atom.startswith("_deolingo_"):
+        if str_atom.startswith("_deolingo_"):
             rewritten_atoms.append(str_atom[len("_deolingo_"):])
         elif str_atom.startswith("-_deolingo_"):
             rewritten_atoms.append("-" + str_atom[len("-_deolingo_"):])
@@ -190,8 +128,7 @@ class DeolingoApplication(clingo.Application):
         See clingo.clingo_main().
         """
         self.program_name = "deolingo"
-        self.version = "0.0.2"
-
+        self.version = "0.0.3"
 
     def print_model(self, model: clingo.Model, printer: Callable[[], None] = None):
         """
@@ -202,14 +139,19 @@ class DeolingoApplication(clingo.Application):
         rewritten_atoms = rewrite_atoms(atoms)
         print("Answer: " + str(rewritten_atoms))
 
-
     def main(self, prg, files):
         """
         Implements the incremental solving loop.
         This function implements the Application.main() function as required by
         clingo.clingo_main().
         """
-        deontic_transform(prg)
+        with ast.ProgramBuilder(prg) as b:
+            files = [open(f) for f in files]
+            if len(files) == 0:
+                files.append(sys.stdin)
+            inputs = [f.read() for f in files]
+            deontic_transform(inputs, b.add)
+        prg.ground([("base", [])])
         prg.solve(on_model=None, async_=False)
 
 
@@ -222,9 +164,13 @@ def rewrite_model(model: clingo.Model):
     return rewritten_atoms
 
 
-def run_deolingo(prog=""):
+def run_deolingo(prog, all_models=False):
     ctl = clingo.Control()
-    deontic_transform(ctl, prog)
+    if all_models:
+        ctl.configuration.solve.models = 0
+    with ast.ProgramBuilder(ctl) as b:
+        deontic_transform([prog], b.add)
+    ctl.ground([("base", [])])
     models = []
     def on_model(m):
         nonlocal models
@@ -234,6 +180,23 @@ def run_deolingo(prog=""):
         print("Answer: " + str(m))
     return models
 
+
+def read_examples():
+    """
+    Returns a list of all examples reading from folders in ../examples
+    """
+    examples_folder = Path(__file__).parent / "../examples"
+    folders = [f for f in listdir(examples_folder) if isdir(join(examples_folder, f))]
+    examples_files = []
+    for folder in folders:
+        folder = examples_folder / folder
+        examples_files += [folder / f for f in listdir(folder) if isfile(join(folder, f)) and f.endswith(".lp")]
+    def name(f):
+        return f.parent.name + "/" + f.name
+    files = [(name(f), open(f)) for f in examples_files]
+    examples = [(f[0],f[1].read()) for f in files]
+    return examples
+    
 
 def main():
     """
