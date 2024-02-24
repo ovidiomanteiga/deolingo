@@ -8,7 +8,8 @@ setup(
     include_package_data=True,
     install_requires=[
         'clingo>=5.6.0',
-        'clingox>=1.2.0'
+        'clingox>=1.2.0',
+        'argparse>=1.4.0'
     ],
     entry_points={
         'console_scripts': [
