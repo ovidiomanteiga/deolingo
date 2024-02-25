@@ -5,19 +5,19 @@ from _deontic_ast_transformer import DeonticTransformer
 from _deontic_atom import *
 
 
-deolingo_theory = """
-#theory _deolingo_ {
-    deontic_term { 
+deolingo_theory = f"""
+#theory _deolingo_ {{
+    deontic_term {{
         & : 2, binary, left;
         - : 3, unary;
         ~ : 3, unary;
         | : 1, binary, left
-    };
-    &ob/0 : deontic_term, any;
-    &fb/0 : deontic_term, any;
-    &nob/0 : deontic_term, any;
-    &nfb/0 : deontic_term, any
-}.
+    }};
+    &{DeonticAtoms.OBLIGATORY.value.name}/0 : deontic_term, any;
+    &{DeonticAtoms.FORBIDDEN.value.name}/0 : deontic_term, any;
+    &{DeonticAtoms.OMISSIBLE.value.name}/0 : deontic_term, any;
+    &{DeonticAtoms.PERMITTED.value.name}/0 : deontic_term, any
+}}.
 """
 
 
@@ -68,7 +68,7 @@ class DeolingoTransformer:
             self._add_string_to_program(rules_as_string)
 
     def _add_common_deontic_rules(self):
-        violation_x = violation("X")
+        violation_x = violated("X")
         fulfilled_x = fulfilled("X")
         ob_x = obligatory("X")
         ob_neg_x = obligatory("-X")
@@ -78,7 +78,8 @@ class DeolingoTransformer:
         holds_neg_x = holds("-X")
         deontic_x = deontic("X")
         implicit_permission_x = implicit_permission("X")
-        explicit_permission_x = explicit_permission("X")
+        omissible_x = omissible("X")
+        permitted_x = permitted("X")
         deontic_rules = [
             f"\n% Deontic axiom D for DELX",
             f":- {ob_x}, {fb_x}, not {holds_x}, not {holds_neg_x}.",
@@ -90,7 +91,10 @@ class DeolingoTransformer:
             f"{ob_x} :- {fb_neg_x}.",
             f"{fb_x}  :- {ob_neg_x}.",
             f"{implicit_permission_x} :- not {fb_x}, {deontic_x}.",
-            f"{explicit_permission_x} :- -{fb_x}, {deontic_x}.",
+            f"{omissible_x} :- -{ob_x}, {deontic_x}.",
+            f"{permitted_x} :- -{fb_x}, {deontic_x}.",
+            f"-{ob_x} :- {omissible_x}, {deontic_x}.",
+            f"-{fb_x} :- {permitted_x}, {deontic_x}."
         ]
         deontic_rules_as_string = "\n".join(deontic_rules) + '\n'
         self._add_string_to_program(deontic_rules_as_string)

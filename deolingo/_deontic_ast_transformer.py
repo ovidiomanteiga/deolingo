@@ -21,28 +21,27 @@ class DeonticTransformer(Transformer):
 
     def map_deontic_atom(self, atom, as_literal=False):
         deontic_atom = DeonticAtoms.with_name(atom.term.name)
-        if deontic_atom is not None:
-            if deontic_atom == DeonticAtoms.NOT_OBLIGATORY:
-                new_name = DeonticAtoms.OBLIGATORY.value.prefixed()
-            elif deontic_atom == DeonticAtoms.NOT_FORBIDDEN:
-                new_name = DeonticAtoms.FORBIDDEN.value.prefixed()
-            else:
-                new_name = deontic_atom.value.prefixed()
-            deontic_atom = deontic_atom.value
-            if len(atom.elements) == 1:
-                new_name = ("-" if deontic_atom.is_negated else "") + new_name
-                new_terms = [theory_term_to_term(tterm) for tterm in atom.elements[0].terms]
-                new_atom = ast.SymbolicAtom(ast.Function(atom.term.location, new_name, new_terms, False))
-                if as_literal:
-                    new_atom = ast.Literal(atom.term.location, ast.Sign.NoSign, new_atom)
-                deontic_term = new_terms[0]
-                if deontic_term.ast_type != ast.ASTType.Variable:
-                    dt_name = str(deontic_term)
-                    dt_is_negated = dt_name.startswith("-")
-                    dt_name = dt_name[1:] if dt_is_negated else dt_name
-                    self.deontic_atoms.add(dt_name)
-                return new_atom
-        return atom
+        if len(atom.elements) != 1 or deontic_atom is None:
+            return atom
+        if deontic_atom == DeonticAtoms.OMISSIBLE:
+            new_name = DeonticAtoms.OBLIGATORY.value.prefixed()
+        elif deontic_atom == DeonticAtoms.PERMITTED:
+            new_name = DeonticAtoms.FORBIDDEN.value.prefixed()
+        else:
+            new_name = deontic_atom.value.prefixed()
+        deontic_atom = deontic_atom.value
+        new_name = ("-" if deontic_atom.is_negated else "") + new_name
+        new_terms = [theory_term_to_term(tterm) for tterm in atom.elements[0].terms]
+        new_atom = ast.SymbolicAtom(ast.Function(atom.term.location, new_name, new_terms, False))
+        if as_literal:
+            new_atom = ast.Literal(atom.term.location, ast.Sign.NoSign, new_atom)
+        deontic_term = new_terms[0]
+        if deontic_term.ast_type != ast.ASTType.Variable:
+            dt_name = str(deontic_term)
+            dt_is_negated = dt_name.startswith("-")
+            dt_name = dt_name[1:] if dt_is_negated else dt_name
+            self.deontic_atoms.add(dt_name)
+        return new_atom
 
     def visit_Rule(self, rule):
         new_head = rule.head

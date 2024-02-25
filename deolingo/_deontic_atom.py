@@ -2,6 +2,7 @@
 from enum import Enum
 from dataclasses import dataclass
 
+
 _deolingo_prefix = "_deolingo_"
 
 
@@ -44,8 +45,8 @@ class DeonticAtoms(Enum):
     """
     OBLIGATORY = DeonticAtom("ob", "obligatory", is_obligation=True)
     FORBIDDEN = DeonticAtom("fb", "forbidden", is_forbidden=True)
-    NOT_OBLIGATORY = DeonticAtom("nob", "not_obligatory", is_negated=True, is_obligation=True)
-    NOT_FORBIDDEN = DeonticAtom("nfb", "not_forbidden", is_negated=True, is_forbidden=False)
+    OMISSIBLE = DeonticAtom("om", "omissible", is_negated=True, is_obligation=True)
+    PERMITTED = DeonticAtom("pm", "permitted", is_negated=True, is_forbidden=False)
     HOLDS = DeonticAtom("holds", "holds")
     DEONTIC = DeonticAtom("deontic", "deontic")
     IMPLICIT_PERMISSION = DeonticAtom("imp_perm", "implicit_permission")
@@ -55,7 +56,7 @@ class DeonticAtoms(Enum):
 
     @classmethod
     def get_all(cls):
-        return [cls.OBLIGATORY, cls.FORBIDDEN, cls.NOT_OBLIGATORY, cls.NOT_FORBIDDEN, cls.HOLDS, cls.DEONTIC,
+        return [cls.OBLIGATORY, cls.FORBIDDEN, cls.OMISSIBLE, cls.PERMITTED, cls.HOLDS, cls.DEONTIC,
                 cls.IMPLICIT_PERMISSION, cls.EXPLICIT_PERMISSION, cls.VIOLATED, cls.FULFILLED]
 
     @classmethod
@@ -81,7 +82,7 @@ def deontic(deontic_atom):
     return DeonticAtoms.DEONTIC.value.wrap(deontic_atom)
 
 
-def violation(deontic_atom):
+def violated(deontic_atom):
     return DeonticAtoms.VIOLATED.value.wrap(deontic_atom)
 
 
@@ -105,5 +106,9 @@ def implicit_permission(deontic_atom):
     return DeonticAtoms.IMPLICIT_PERMISSION.value.wrap(deontic_atom)
 
 
-def explicit_permission(deontic_atom):
-    return DeonticAtoms.EXPLICIT_PERMISSION.value.wrap(deontic_atom)
+def omissible(deontic_atom):
+    return DeonticAtoms.OMISSIBLE.value.wrap(deontic_atom)
+
+
+def permitted(deontic_atom):
+    return DeonticAtoms.PERMITTED.value.wrap(deontic_atom)

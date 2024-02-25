@@ -8,6 +8,6 @@
 % If it is obligatory a white fence, then it is obligatory a fence.
 &ob{f} :- &ob{w}.
 % (iv) If it is permitted (explicit), I build a fence around my cottage
-f :- &nfb{f}.
+f :- &pm{f}.
 % (iv) If it is permitted (implicit), I build a fence around my cottage
 %f :- not &fb{f}.
