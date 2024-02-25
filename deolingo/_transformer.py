@@ -23,18 +23,26 @@ deolingo_theory = """
 
 class DeolingoTransformer:
 
-    def __init__(self, add_to_program_callback, transformer=DeonticTransformer()):
+    def __init__(self, add_to_program_callback, transformer=DeonticTransformer(), translate=False):
         self.deontic_transformer = transformer
         self._add_to_program_callback = add_to_program_callback
+        self.translate = translate
+        self.translated_program = ""
+        transformer.translate = translate
 
     def transform(self, inputs):
         self._add_string_to_program(deolingo_theory)
         self._transform_and_add_source_inputs(inputs)
-        self._add_rules_for_each_deontic_atom()
         self._add_common_deontic_rules()
+        self._add_rules_for_each_deontic_atom()
+
+    def _add_to_translation(self, statement):
+        if self.translate:
+            self.translated_program += str(statement)
 
     def _add_string_to_program(self, statement):
         parse_string(statement, self._add_to_program_callback)
+        self._add_to_translation(statement)
 
     def _transform_and_add_to_program(self, statement):
         transformed_statement = self.deontic_transformer(statement)
@@ -43,6 +51,7 @@ class DeolingoTransformer:
     def _transform_and_add_source_inputs(self, inputs):
         for source_input in inputs:
             parse_string(source_input, self._transform_and_add_to_program)
+        self._add_to_translation(self.deontic_transformer.translated_program)
 
     def _add_rules_for_each_deontic_atom(self):
         for deontic_atom in self.deontic_transformer.deontic_atoms:
@@ -50,11 +59,12 @@ class DeolingoTransformer:
             holds_negative = holds(f"-{deontic_atom}")
             is_deontic = deontic(deontic_atom)
             rules = [
+                f"\n% Deontic atom rules for '{deontic_atom}'",
                 f"{holds_positive} :- {deontic_atom}.",
                 f"{holds_negative} :- -{deontic_atom}.",
                 f"{is_deontic}."
             ]
-            rules_as_string = "\n".join(rules)
+            rules_as_string = "\n".join(rules) + '\n'
             self._add_string_to_program(rules_as_string)
 
     def _add_common_deontic_rules(self):
@@ -70,6 +80,9 @@ class DeolingoTransformer:
         implicit_permission_x = implicit_permission("X")
         explicit_permission_x = explicit_permission("X")
         deontic_rules = [
+            f"\n% Deontic axiom D for DELX",
+            f":- {ob_x}, {fb_x}, not {holds_x}, not {holds_neg_x}.",
+            f"\n% Deontic operator rules",
             f"{violation_x} :- {ob_x}, {holds_neg_x}.",
             f"{violation_x} :- {fb_x}, {holds_x}.",
             f"{fulfilled_x} :- {ob_x}, {holds_x}.",
@@ -78,7 +91,6 @@ class DeolingoTransformer:
             f"{fb_x}  :- {ob_neg_x}.",
             f"{implicit_permission_x} :- not {fb_x}, {deontic_x}.",
             f"{explicit_permission_x} :- -{fb_x}, {deontic_x}.",
-            f":- {ob_x}, {fb_x}, not {holds_x}, not {holds_neg_x}.",
         ]
-        deontic_rules_as_string = "\n".join(deontic_rules)
+        deontic_rules_as_string = "\n".join(deontic_rules) + '\n'
         self._add_string_to_program(deontic_rules_as_string)

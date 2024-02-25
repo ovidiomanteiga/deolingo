@@ -4,6 +4,7 @@ from typing import Callable
 
 import clingo
 import clingo.ast as ast
+from clingox.pprint import pprint
 
 from _facade import rewrite_atoms
 from _transformer import DeolingoTransformer
@@ -20,7 +21,16 @@ class DeolingoApplication(clingo.Application):
         See clingo.clingo_main().
         """
         self.program_name = "deolingo"
-        self.version = "0.0.3"
+        self.version = "0.0.4"
+        self.translate_flag = clingo.Flag(False)
+
+    def register_options(self, options: clingo.ApplicationOptions):
+        """
+        Registers the options for the application.
+        """
+        # add an option to translate the deontic logic program into an ASP program
+        options.add_flag("deontic", "translate",
+                         "Translate a deontic logic program into an ASP program", self.translate_flag)
 
     def print_model(self, model: clingo.Model, printer: Callable[[], None] = None):
         """
@@ -42,7 +52,11 @@ class DeolingoApplication(clingo.Application):
             if len(files) == 0:
                 files.append(sys.stdin)
             inputs = [f.read() for f in files]
-            transformer = DeolingoTransformer(b.add)
+            transformer = DeolingoTransformer(b.add, translate=self.translate_flag.flag)
             transformer.transform(inputs)
+        if self.translate_flag.flag:
+            print(transformer.translated_program)
+            return
+        prg.configuration.solve.quiet = True
         prg.ground([("base", [])])
         prg.solve(on_model=None, async_=False)

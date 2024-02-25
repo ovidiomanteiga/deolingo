@@ -3,17 +3,16 @@ from setuptools import setup, find_packages
 
 setup(
     name='deolingo',
-    version='0.0.3',
+    version='0.0.4',
     packages=find_packages(),
     include_package_data=True,
     install_requires=[
         'clingo>=5.6.0',
-        'clingox>=1.2.0',
-        'argparse>=1.4.0'
+        'clingox>=1.2.0'
     ],
     entry_points={
         'console_scripts': [
-            'deolingo=deolingo.cli:main'
+            'deolingo=deolingo:main'
         ]
     },
     author='Ovidio M. Moar',

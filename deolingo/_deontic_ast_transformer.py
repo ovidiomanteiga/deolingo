@@ -8,15 +8,27 @@ from _deontic_atom import DeonticAtoms
 
 class DeonticTransformer(Transformer):
 
-    def __init__(self):
+    def __init__(self, translate=False):
         super().__init__()
         self.deontic_atoms = set()
+        self.translate = translate
+        self.translated_program = ""
+
+    def _add_to_translation(self, location, statement):
+        if self.translate:
+            self.translated_program += f"\n% Source line: {location.begin.line}\n"
+            self.translated_program += str(statement) + "\n"
 
     def map_deontic_atom(self, atom, as_literal=False):
         deontic_atom = DeonticAtoms.with_name(atom.term.name)
         if deontic_atom is not None:
+            if deontic_atom == DeonticAtoms.NOT_OBLIGATORY:
+                new_name = DeonticAtoms.OBLIGATORY.value.prefixed()
+            elif deontic_atom == DeonticAtoms.NOT_FORBIDDEN:
+                new_name = DeonticAtoms.FORBIDDEN.value.prefixed()
+            else:
+                new_name = deontic_atom.value.prefixed()
             deontic_atom = deontic_atom.value
-            new_name = deontic_atom.prefixed()
             if len(atom.elements) == 1:
                 new_name = ("-" if deontic_atom.is_negated else "") + new_name
                 new_terms = [theory_term_to_term(tterm) for tterm in atom.elements[0].terms]
@@ -41,7 +53,9 @@ class DeonticTransformer(Transformer):
         new_body = rule.body
         if rule.body is not None:
             new_body = self.visit_sequence(rule.body)
-        return ast.Rule(rule.location, new_head, new_body)
+        new_rule = ast.Rule(rule.location, new_head, new_body)
+        self._add_to_translation(rule.location, new_rule)
+        return new_rule
 
     def visit_TheoryAtom(self, atom):
         return self.map_deontic_atom(atom)

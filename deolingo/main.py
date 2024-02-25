@@ -1,15 +1,18 @@
 
 import clingo
-from _application import DeolingoApplication
 import sys
+
+from _application import DeolingoApplication
 
 
 def main():
     """
     Run the deolingo application.
     """
-    sys.exit(int(clingo.clingo_main(DeolingoApplication(), sys.argv[1:])))
+    app = DeolingoApplication()
+    sys.exit(int(clingo.clingo_main(app)))
 
 
 if __name__ == '__main__':
     main()
+
