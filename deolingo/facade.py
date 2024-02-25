@@ -6,8 +6,8 @@ from pathlib import Path
 import clingo
 import clingo.ast as ast
 
-from _transformer import DeolingoTransformer
-from _deontic_atom import DeonticAtoms, unprefix
+from deolingo._deontic_atom import DeonticAtoms, unprefix
+from deolingo._transformer import DeolingoTransformer
 
 
 def rewrite_atoms(atoms):
@@ -74,4 +74,21 @@ def read_examples():
         return f.parent.name + "/" + f.name
     files = [(name(f), open(f)) for f in examples_files]
     examples = [(f[0], f[1].read()) for f in files]
+    return examples
+
+
+def read_example(example):
+    """
+    Returns a list of all examples reading from folders in /examples
+    """
+    examples_folder = Path(__file__).parent / "examples"
+    if isfile(join(examples_folder, example)) and example.endswith(".lp"):
+        example_file = examples_folder / example
+    else:
+        return None
+
+    def name(f):
+        return f.parent.name + "/" + f.name
+    file = (name(example_file), open(example_file))
+    examples = (file[0], file[1].read())
     return examples

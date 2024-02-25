@@ -2,7 +2,7 @@
 import clingo
 import sys
 
-from _application import DeolingoApplication
+from deolingo._application import DeolingoApplication
 
 
 def main():

@@ -3,7 +3,7 @@ from clingo import ast as ast
 from clingo.ast import Transformer
 from clingox.ast import theory_term_to_term
 
-from _deontic_atom import DeonticAtoms
+from deolingo._deontic_atom import DeonticAtoms
 
 
 class DeonticTransformer(Transformer):

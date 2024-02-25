@@ -1,8 +1,8 @@
 from clingo.ast import parse_string
 
-from _deontic_ast_transformer import DeonticTransformer
+from deolingo._deontic_ast_transformer import DeonticTransformer
 
-from _deontic_atom import *
+from deolingo._deontic_atom import *
 
 
 deolingo_theory = f"""

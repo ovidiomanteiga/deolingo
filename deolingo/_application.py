@@ -4,10 +4,9 @@ from typing import Callable
 
 import clingo
 import clingo.ast as ast
-from clingox.pprint import pprint
 
-from _facade import rewrite_atoms
-from _transformer import DeolingoTransformer
+from deolingo.facade import rewrite_atoms
+from deolingo._transformer import DeolingoTransformer
 
 
 class DeolingoApplication(clingo.Application):
@@ -21,7 +20,7 @@ class DeolingoApplication(clingo.Application):
         See clingo.clingo_main().
         """
         self.program_name = "deolingo"
-        self.version = "0.0.4"
+        self.version = "0.0.5"
         self.translate_flag = clingo.Flag(False)
 
     def register_options(self, options: clingo.ApplicationOptions):
