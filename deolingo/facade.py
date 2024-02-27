@@ -16,16 +16,15 @@ def rewrite_atoms(atoms):
     """
     rewritten_atoms = []
     for atom in atoms:
-        is_negated = atom.name.startswith("-")
-        atom_name = atom.name[1:] if is_negated else atom.name
-        deontic_atom = DeonticAtoms.with_prefixed_name(atom_name)
         str_atom = str(atom)
-        str_atom = str_atom[1:] if is_negated else str_atom
+        is_negated = str_atom.startswith("-")
+        deontic_atom = DeonticAtoms.with_prefixed_name(atom.name)
         if deontic_atom is None:
             rewritten_atoms.append(str_atom)
             continue
         if deontic_atom in [DeonticAtoms.DEONTIC, DeonticAtoms.HOLDS]:
             continue
+        str_atom = str_atom[1:] if is_negated else str_atom
         unprefixed = unprefix(str_atom)
         rewritten = unprefixed if not is_negated else "-" + unprefixed
         rewritten_atoms.append(rewritten)

@@ -16,7 +16,26 @@ deolingo_theory = f"""
     &{DeonticAtoms.OBLIGATORY.value.name}/0 : deontic_term, any;
     &{DeonticAtoms.FORBIDDEN.value.name}/0 : deontic_term, any;
     &{DeonticAtoms.OMISSIBLE.value.name}/0 : deontic_term, any;
-    &{DeonticAtoms.PERMITTED.value.name}/0 : deontic_term, any
+    &{DeonticAtoms.PERMITTED.value.name}/0 : deontic_term, any;
+    &{DeonticAtoms.OPTIONAL.value.name}/0 : deontic_term, any;
+    &{DeonticAtoms.PERMITTED_BY_DEFAULT.value.name}/0 : deontic_term, any;
+    &{DeonticAtoms.HOLDS.value.name}/0 : deontic_term, any;
+    &{DeonticAtoms.DEONTIC.value.name}/0 : deontic_term, any;
+    &{DeonticAtoms.PERMITTED_IMPLICITLY.value.name}/0 : deontic_term, any;
+    &{DeonticAtoms.VIOLATED.value.name}/0 : deontic_term, any;
+    &{DeonticAtoms.FULFILLED.value.name}/0 : deontic_term, any;
+    &{DeonticAtoms.VIOLATED_OBLIGATION.value.name}/0 : deontic_term, any;
+    &{DeonticAtoms.FULFILLED_OBLIGATION.value.name}/0 : deontic_term, any;
+    &{DeonticAtoms.NON_VIOLATED_OBLIGATION.value.name}/0 : deontic_term, any;
+    &{DeonticAtoms.NON_FULFILLED_OBLIGATION.value.name}/0 : deontic_term, any;
+    &{DeonticAtoms.UNDETERMINED_OBLIGATION.value.name}/0 : deontic_term, any;
+    &{DeonticAtoms.DEFAULT_OBLIGATION.value.name}/0 : deontic_term, any;
+    &{DeonticAtoms.VIOLATED_PROHIBITION.value.name}/0 : deontic_term, any;
+    &{DeonticAtoms.FULFILLED_PROHIBITION.value.name}/0 : deontic_term, any;
+    &{DeonticAtoms.NON_VIOLATED_PROHIBITION.value.name}/0 : deontic_term, any;
+    &{DeonticAtoms.NON_FULFILLED_PROHIBITION.value.name}/0 : deontic_term, any;
+    &{DeonticAtoms.UNDETERMINED_PROHIBITION.value.name}/0 : deontic_term, any;
+    &{DeonticAtoms.DEFAULT_PROHIBITION.value.name}/0 : deontic_term, any
 }}.
 """
 
@@ -68,33 +87,87 @@ class DeolingoTransformer:
             self._add_string_to_program(rules_as_string)
 
     def _add_common_deontic_rules(self):
-        violation_x = violated("X")
-        fulfilled_x = fulfilled("X")
-        ob_x = obligatory("X")
-        ob_neg_x = obligatory("-X")
-        fb_x = forbidden("X")
-        fb_neg_x = forbidden("-X")
-        holds_x = holds("X")
-        holds_neg_x = holds("-X")
-        deontic_x = deontic("X")
-        implicit_permission_x = implicit_permission("X")
-        omissible_x = omissible("X")
-        permitted_x = permitted("X")
         deontic_rules = [
             f"\n% Deontic axiom D for DELX",
-            f":- {ob_x}, {fb_x}, not {holds_x}, not {holds_neg_x}.",
+            f":- {obligatory('X')}, {forbidden('X')}, not {holds('X')}, not {holds('-X')}.",
             f"\n% Deontic operator rules",
-            f"{violation_x} :- {ob_x}, {holds_neg_x}.",
-            f"{violation_x} :- {fb_x}, {holds_x}.",
-            f"{fulfilled_x} :- {ob_x}, {holds_x}.",
-            f"{fulfilled_x} :- {fb_x}, {holds_neg_x}.",
-            f"{ob_x} :- {fb_neg_x}.",
-            f"{fb_x}  :- {ob_neg_x}.",
-            f"{implicit_permission_x} :- not {fb_x}, {deontic_x}.",
-            f"{omissible_x} :- -{ob_x}, {deontic_x}.",
-            f"{permitted_x} :- -{fb_x}, {deontic_x}.",
-            f"-{ob_x} :- {omissible_x}, {deontic_x}.",
-            f"-{fb_x} :- {permitted_x}, {deontic_x}."
+            # Violation
+            f"{violated('X')} :- {obligatory('X')}, {holds('-X')}.",
+            f"{violated('-X')} :- {forbidden('X')}, {holds('X')}.",
+            # Fulfillment
+            f"{fulfilled('X')} :- {obligatory('X')}, {holds('X')}.",
+            f"{fulfilled('-X')} :- {forbidden('X')}, {holds('-X')}.",
+            # Obigation/prohibition
+            f"{obligatory('X')} :- {forbidden('-X')}.",
+            f"{forbidden('X')}  :- {obligatory('-X')}.",
+            f"{obligatory('-X')} :- {forbidden('X')}.",
+            f"{forbidden('-X')}  :- {obligatory('X')}.",
+            # Implicit permission
+            f"{permitted_implicitly('X')} :- not {forbidden('X')}, {deontic('X')}.",
+            # Permissible and omissible
+            f"{omissible('X')} :- -{obligatory('X')}, {deontic('X')}.",
+            f"{permitted('X')} :- -{forbidden('X')}, {deontic('X')}.",
+            f"-{obligatory('X')} :- {omissible('X')}, {deontic('X')}.",
+            f"-{forbidden('X')} :- {permitted('X')}, {deontic('X')}.",
+            f"-{omissible('X')} :- {obligatory('X')}, {deontic('X')}.",
+            f"-{permitted('X')} :- {forbidden('X')}, {deontic('X')}.",
+            f"{obligatory('X')} :- -{omissible('X')}, {deontic('X')}.",
+            f"{forbidden('X')} :- -{permitted('X')}, {deontic('X')}.",
+            # Optional
+            f"{optional('X')} :- {omissible('X')}, {permitted('X')}.",
+            f"{omissible('X')} :- {optional('X')}.",
+            f"{permitted('X')} :- {optional('X')}.",
+            # Permitted by default
+            f"{permitted_by_default('X')} :- {permitted('X')}: not {forbidden('X')}; {deontic('X')}.",
+            f"not not {forbidden('X')}; {permitted('X')} :- {permitted_by_default('X')}.",
+            # Obligation violation
+            f"{violated_obligation('X')} :- {obligatory('X')}, {holds('-X')}.",
+            f"{obligatory('X')} :- {violated_obligation('X')}.",
+            f"{holds('-X')} :- {violated_obligation('X')}.",
+            # Fulfilled obligation
+            f"{fulfilled_obligation('X')} :- {obligatory('X')}, {holds('X')}.",
+            f"{obligatory('X')} :- {fulfilled_obligation('X')}.",
+            f"{holds('X')} :- {fulfilled_obligation('X')}.",
+            # Non-fulfilled obligation
+            f"{non_fulfilled_obligation('X')} :- {obligatory('X')}, not {holds('X')}, {deontic('X')}.",
+            f"{obligatory('X')} :- {non_fulfilled_obligation('X')}.",
+            f"not {holds('X')} :- {non_fulfilled_obligation('X')}.",
+            # Non-violated obligation
+            f"{non_violated_obligation('X')} :- {obligatory('X')}, not {holds('-X')}, {deontic('X')}.",
+            f"{obligatory('X')} :- {non_violated_obligation('X')}.",
+            f"not {holds('-X')} :- {non_violated_obligation('X')}.",
+            # Undetermined obligation
+            f"{undetermined_obligation('X')} :- {obligatory('X')}, not {holds('X')}, not {holds('-X')}, {deontic('X')}.",
+            f"{obligatory('X')} :- {undetermined_obligation('X')}.",
+            f"not {holds('X')} :- {undetermined_obligation('X')}.",
+            f"not {holds('-X')} :- {undetermined_obligation('X')}.",
+            # Default obligation
+            f"{default_obligation('X')} :- {obligatory('X')}: not {permitted('-X')}; {deontic('X')}.",
+            f"%{obligatory('X')}; not not {permitted('-X')} :- {default_obligation('X')}.",
+            # Violated prohibition
+            f"{violated_prohibition('X')} :- {forbidden('X')}, {holds('X')}.",
+            f"{forbidden('X')} :- {violated_prohibition('X')}.",
+            f"{holds('X')} :- {violated_prohibition('X')}.",
+            # Fulfilled obligation
+            f"{fulfilled_prohibition('X')} :- {forbidden('X')}, {holds('-X')}.",
+            f"{forbidden('X')} :- {fulfilled_prohibition('X')}.",
+            f"{holds('-X')} :- {fulfilled_prohibition('X')}.",
+            # Non-fulfilled prohibition
+            f"{non_fulfilled_prohibition('X')} :- {forbidden('X')}, not {holds('-X')}, {deontic('X')}.",
+            f"{forbidden('X')} :- {non_fulfilled_prohibition('X')}.",
+            f"not {holds('-X')} :- {non_fulfilled_prohibition('X')}.",
+            # Non-violated prohibition
+            f"{non_violated_prohibition('X')} :- {forbidden('X')}, not {holds('X')}, {deontic('X')}.",
+            f"{forbidden('X')} :- {non_violated_prohibition('X')}.",
+            f"not {holds('X')} :- {non_violated_prohibition('X')}.",
+            # Undetermined prohibition
+            f"{undetermined_prohibition('X')} :- {forbidden('X')}, not {holds('X')}, not {holds('-X')}, {deontic('X')}.",
+            f"{forbidden('X')} :- {undetermined_prohibition('X')}.",
+            f"not {holds('X')} :- {undetermined_prohibition('X')}.",
+            f"not {holds('-X')} :- {undetermined_prohibition('X')}.",
+            # Default prohibition
+            f"{default_prohibition('X')} :- {forbidden('X')}: not {permitted('X')}; {deontic('X')}.",
+            f"{forbidden('X')}; not not {permitted('X')} :- {default_prohibition('X')}.",
         ]
         deontic_rules_as_string = "\n".join(deontic_rules) + '\n'
         self._add_string_to_program(deontic_rules_as_string)

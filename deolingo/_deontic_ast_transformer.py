@@ -23,14 +23,7 @@ class DeonticTransformer(Transformer):
         deontic_atom = DeonticAtoms.with_name(atom.term.name)
         if len(atom.elements) != 1 or deontic_atom is None:
             return atom
-        if deontic_atom == DeonticAtoms.OMISSIBLE:
-            new_name = DeonticAtoms.OBLIGATORY.value.prefixed()
-        elif deontic_atom == DeonticAtoms.PERMITTED:
-            new_name = DeonticAtoms.FORBIDDEN.value.prefixed()
-        else:
-            new_name = deontic_atom.value.prefixed()
-        deontic_atom = deontic_atom.value
-        new_name = ("-" if deontic_atom.is_negated else "") + new_name
+        new_name = deontic_atom.value.prefixed()
         new_terms = [theory_term_to_term(tterm) for tterm in atom.elements[0].terms]
         new_atom = ast.SymbolicAtom(ast.Function(atom.term.location, new_name, new_terms, False))
         if as_literal:

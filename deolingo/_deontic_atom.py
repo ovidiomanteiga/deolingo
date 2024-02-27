@@ -25,9 +25,6 @@ class DeonticAtom:
 
     name: str
     long_name: str
-    is_negated: bool = False
-    is_obligation: bool = False
-    is_forbidden: bool = False
 
     def prefixed(self):
         return prefix(self.name)
@@ -43,21 +40,33 @@ class DeonticAtoms(Enum):
     """
     Enumeration of the deontic atoms.
     """
-    OBLIGATORY = DeonticAtom("ob", "obligatory", is_obligation=True)
-    FORBIDDEN = DeonticAtom("fb", "forbidden", is_forbidden=True)
-    OMISSIBLE = DeonticAtom("om", "omissible", is_negated=True, is_obligation=True)
-    PERMITTED = DeonticAtom("pm", "permitted", is_negated=True, is_forbidden=False)
+    OBLIGATORY = DeonticAtom("ob", "obligatory")
+    FORBIDDEN = DeonticAtom("fb", "forbidden")
+    OMISSIBLE = DeonticAtom("om", "omissible")
+    PERMITTED = DeonticAtom("pm", "permitted")
+    OPTIONAL = DeonticAtom("op", "optional")
+    PERMITTED_BY_DEFAULT = DeonticAtom("pm_def", "permitted_by_default")
     HOLDS = DeonticAtom("holds", "holds")
     DEONTIC = DeonticAtom("deontic", "deontic")
-    IMPLICIT_PERMISSION = DeonticAtom("imp_perm", "implicit_permission")
-    EXPLICIT_PERMISSION = DeonticAtom("exp_perm", "explicit_permission")
-    VIOLATED = DeonticAtom("violated", "violated")
-    FULFILLED = DeonticAtom("fulfilled", "fulfilled")
+    PERMITTED_IMPLICITLY = DeonticAtom("pm_imp", "permitted_implicitly")
+    VIOLATED = DeonticAtom("viol", "violated")
+    FULFILLED = DeonticAtom("ful", "fulfilled")
+    VIOLATED_OBLIGATION = DeonticAtom("ob_viol", "violated_obligation")
+    FULFILLED_OBLIGATION = DeonticAtom("ob_ful", "fulfilled_obligation")
+    NON_VIOLATED_OBLIGATION = DeonticAtom("ob_not_viol", "non_violated_obligation")
+    NON_FULFILLED_OBLIGATION = DeonticAtom("ob_not_ful", "non_fulfilled_obligation")
+    UNDETERMINED_OBLIGATION = DeonticAtom("ob_und", "undetermined_obligation")
+    DEFAULT_OBLIGATION = DeonticAtom("ob_def", "default_obligation")
+    VIOLATED_PROHIBITION = DeonticAtom("fb_viol", "violated_prohibition")
+    FULFILLED_PROHIBITION = DeonticAtom("fb_ful", "fulfilled_prohibition")
+    NON_VIOLATED_PROHIBITION = DeonticAtom("fb_not_viol", "non_violated_prohibition")
+    NON_FULFILLED_PROHIBITION = DeonticAtom("fb_not_ful", "non_fulfilled_prohibition")
+    UNDETERMINED_PROHIBITION = DeonticAtom("fb_und", "undetermined_prohibition")
+    DEFAULT_PROHIBITION = DeonticAtom("fb_def", "default_prohibition")
 
     @classmethod
     def get_all(cls):
-        return [cls.OBLIGATORY, cls.FORBIDDEN, cls.OMISSIBLE, cls.PERMITTED, cls.HOLDS, cls.DEONTIC,
-                cls.IMPLICIT_PERMISSION, cls.EXPLICIT_PERMISSION, cls.VIOLATED, cls.FULFILLED]
+        return [atom for atom in DeonticAtoms]
 
     @classmethod
     def get_all_names(cls):
@@ -98,12 +107,16 @@ def forbidden(deontic_atom):
     return DeonticAtoms.FORBIDDEN.value.wrap(deontic_atom)
 
 
+def optional(deontic_atom):
+    return DeonticAtoms.OPTIONAL.value.wrap(deontic_atom)
+
+
 def holds(deontic_atom):
     return DeonticAtoms.HOLDS.value.wrap(deontic_atom)
 
 
-def implicit_permission(deontic_atom):
-    return DeonticAtoms.IMPLICIT_PERMISSION.value.wrap(deontic_atom)
+def permitted_implicitly(deontic_atom):
+    return DeonticAtoms.PERMITTED_IMPLICITLY.value.wrap(deontic_atom)
 
 
 def omissible(deontic_atom):
@@ -112,3 +125,55 @@ def omissible(deontic_atom):
 
 def permitted(deontic_atom):
     return DeonticAtoms.PERMITTED.value.wrap(deontic_atom)
+
+
+def permitted_by_default(deontic_atom):
+    return DeonticAtoms.PERMITTED_BY_DEFAULT.value.wrap(deontic_atom)
+
+
+def violated_obligation(deontic_atom):
+    return DeonticAtoms.VIOLATED_OBLIGATION.value.wrap(deontic_atom)
+
+
+def fulfilled_obligation(deontic_atom):
+    return DeonticAtoms.FULFILLED_OBLIGATION.value.wrap(deontic_atom)
+
+
+def non_violated_obligation(deontic_atom):
+    return DeonticAtoms.NON_VIOLATED_OBLIGATION.value.wrap(deontic_atom)
+
+
+def non_fulfilled_obligation(deontic_atom):
+    return DeonticAtoms.NON_FULFILLED_OBLIGATION.value.wrap(deontic_atom)
+
+
+def undetermined_obligation(deontic_atom):
+    return DeonticAtoms.UNDETERMINED_OBLIGATION.value.wrap(deontic_atom)
+
+
+def default_obligation(deontic_atom):
+    return DeonticAtoms.DEFAULT_OBLIGATION.value.wrap(deontic_atom)
+
+
+def violated_prohibition(deontic_atom):
+    return DeonticAtoms.VIOLATED_PROHIBITION.value.wrap(deontic_atom)
+
+
+def fulfilled_prohibition(deontic_atom):
+    return DeonticAtoms.FULFILLED_PROHIBITION.value.wrap(deontic_atom)
+
+
+def non_violated_prohibition(deontic_atom):
+    return DeonticAtoms.NON_VIOLATED_PROHIBITION.value.wrap(deontic_atom)
+
+
+def non_fulfilled_prohibition(deontic_atom):
+    return DeonticAtoms.NON_FULFILLED_PROHIBITION.value.wrap(deontic_atom)
+
+
+def undetermined_prohibition(deontic_atom):
+    return DeonticAtoms.UNDETERMINED_PROHIBITION.value.wrap(deontic_atom)
+
+
+def default_prohibition(deontic_atom):
+    return DeonticAtoms.DEFAULT_PROHIBITION.value.wrap(deontic_atom)
