@@ -46,9 +46,11 @@ class DeonticAtoms(Enum):
     PERMITTED = DeonticAtom("pm", "permitted")
     OPTIONAL = DeonticAtom("op", "optional")
     PERMITTED_BY_DEFAULT = DeonticAtom("pm_def", "permitted_by_default")
+    OMISSIBLE_BY_DEFAULT = DeonticAtom("om_def", "omissible_by_default")
     HOLDS = DeonticAtom("holds", "holds")
     DEONTIC = DeonticAtom("deontic", "deontic")
     PERMITTED_IMPLICITLY = DeonticAtom("pm_imp", "permitted_implicitly")
+    OMISSIBLE_IMPLICITLY = DeonticAtom("om_imp", "omissible_implicitly")
     VIOLATED = DeonticAtom("viol", "violated")
     FULFILLED = DeonticAtom("ful", "fulfilled")
     VIOLATED_OBLIGATION = DeonticAtom("ob_viol", "violated_obligation")
@@ -119,6 +121,10 @@ def permitted_implicitly(deontic_atom):
     return DeonticAtoms.PERMITTED_IMPLICITLY.value.wrap(deontic_atom)
 
 
+def omissible_implicitly(deontic_atom):
+    return DeonticAtoms.OMISSIBLE_IMPLICITLY.value.wrap(deontic_atom)
+
+
 def omissible(deontic_atom):
     return DeonticAtoms.OMISSIBLE.value.wrap(deontic_atom)
 
@@ -129,6 +135,10 @@ def permitted(deontic_atom):
 
 def permitted_by_default(deontic_atom):
     return DeonticAtoms.PERMITTED_BY_DEFAULT.value.wrap(deontic_atom)
+
+
+def omissible_by_default(deontic_atom):
+    return DeonticAtoms.OMISSIBLE_BY_DEFAULT.value.wrap(deontic_atom)
 
 
 def violated_obligation(deontic_atom):
