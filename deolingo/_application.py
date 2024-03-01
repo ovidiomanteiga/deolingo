@@ -5,6 +5,7 @@ from typing import Callable
 import clingo
 import clingo.ast as ast
 
+from deolingo import _version
 from deolingo.facade import rewrite_atoms
 from deolingo._transformer import DeolingoTransformer
 
@@ -20,7 +21,7 @@ class DeolingoApplication(clingo.Application):
         See clingo.clingo_main().
         """
         self.program_name = "deolingo"
-        self.version = "0.0.5"
+        self.version = _version.__version__
         self.translate_flag = clingo.Flag(False)
 
     def register_options(self, options: clingo.ApplicationOptions):

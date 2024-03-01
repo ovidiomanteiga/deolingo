@@ -1,9 +1,12 @@
 
 from setuptools import setup, find_packages
 
+version = {}
+exec(open('deolingo/_version.py').read(), version)
+
 setup(
     name='deolingo',
-    version='0.0.5',
+    version=version['__version__'],
     packages=find_packages(),
     include_package_data=True,
     install_requires=[
