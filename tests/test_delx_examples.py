@@ -1,5 +1,5 @@
 
-from deolingo.facade import run_deolingo, read_example
+from deolingo.lib import solve, read_example
 
 
 def test_delx_example_1_1():
@@ -8,7 +8,7 @@ def test_delx_example_1_1():
     expected_answer_set = {'ob(-f)', 'fb(f)', 'pm_i(w)', 'om_i(w)', 'om_i(f)', '-om(-f)', '-pm(f)', 'pm_d(f)',
                            'ob_nf(-f)', 'ob_nv(-f)', 'ob_u(-f)', 'fb_nf(f)', 'fb_nv(f)', 'fb_u(f)', 'fb_d(f)'}
     # Act
-    actual_answer_sets = run_deolingo(example[1])
+    actual_answer_sets = solve(example[1])
     # Assert
     assert len(actual_answer_sets) == 1
     actual_answer_set = set(actual_answer_sets[0])
@@ -21,7 +21,7 @@ def test_delx_example_1_2():
     expected_answer_set = {'ob(-f)', 'fb(f)', 'pm_i(w)', 'om_i(w)', 'om_i(f)', '-om(-f)', '-pm(f)', 'pm_d(f)',
                            'ob_nf(-f)', 'ob_nv(-f)', 'ob_u(-f)', 'fb_nf(f)', 'fb_nv(f)', 'fb_u(f)', 'fb_d(f)'}
     # Act
-    actual_answer_sets = run_deolingo(example[1])
+    actual_answer_sets = solve(example[1])
     # Assert
     assert len(actual_answer_sets) == 1
     actual_answer_set = set(actual_answer_sets[0])
@@ -35,7 +35,7 @@ def test_delx_example_2():
                            '-pm(f)', 'pm_d(f)', 'ob_nf(-f)', 'ob_nv(-f)', 'ob_u(-f)', 'fb_nf(f)', 'fb_nv(f)',
                            'fb_u(f)', 'fb_d(f)'}
     # Act
-    actual_answer_sets = run_deolingo(example[1])
+    actual_answer_sets = solve(example[1])
     # Assert
     assert len(actual_answer_sets) == 1
     actual_answer_set = set(actual_answer_sets[0])
@@ -53,7 +53,7 @@ def test_delx_example_3():
                            'ob_d(f)', 'ob_d(w)', 'ob_d(pay)', 'fb_nf(f)', 'fb_nf(-w)', 'fb_nf(-pay)', 'fb_nv(-w)',
                            'fb_nv(-f)', 'fb_nv(-pay)', 'fb_u(-w)', 'fb_u(-pay)', 'fb_d(f)'}
     # Act
-    actual_answer_sets = run_deolingo(example[1])
+    actual_answer_sets = solve(example[1])
     # Assert
     assert len(actual_answer_sets) == 1
     actual_answer_set = set(actual_answer_sets[0])
@@ -66,7 +66,7 @@ def test_delx_example_4():
     expected_answer_set = {'fb(f)', 'ob(-f)', 'pm_i(w)', 'om_i(w)', 'om_i(f)', '-om(-f)', '-pm(f)', 'pm_d(f)',
                            'ob_nf(-f)', 'ob_nv(-f)', 'ob_u(-f)', 'fb_nf(f)', 'fb_nv(f)', 'fb_u(f)', 'fb_d(f)'}
     # Act
-    actual_answer_sets = run_deolingo(example[1])
+    actual_answer_sets = solve(example[1])
     # Assert
     assert len(actual_answer_sets) == 1
     actual_answer_set = set(actual_answer_sets[0])
@@ -77,7 +77,7 @@ def test_delx_example_5_1():
     # Arrange
     example = read_example("delx/example5.1.lp")
     # Act
-    actual_answer_sets = run_deolingo(example[1])
+    actual_answer_sets = solve(example[1])
     # Assert
     assert actual_answer_sets == []
 
@@ -91,7 +91,7 @@ def test_delx_example_5_2():
                            'ob_nf(w)', 'ob_nf(-f)', 'ob_nv(w)', 'ob_nv(f)', 'ob_u(w)', 'ob_d(f)', 'ob_d(w)', 'fb_nf(f)',
                            'fb_nf(-w)', 'fb_nv(-w)', 'fb_nv(-f)', 'fb_u(-w)', 'fb_d(f)'}
     # Act
-    actual_answer_sets = run_deolingo(example[1])
+    actual_answer_sets = solve(example[1])
     # Assert
     assert len(actual_answer_sets) == 1
     actual_answer_set = set(actual_answer_sets[0])
@@ -115,7 +115,7 @@ def test_delx_example_6_1():
          'fb_u(-m)', 'fb_d(f)'}
     ]
     # Act
-    actual_answer_sets = run_deolingo(example[1], all_models=True)
+    actual_answer_sets = solve(example[1], all_models=True)
     # Assert
     assert len(actual_answer_sets) == 2
     actual_answer_set_0 = set(actual_answer_sets[0])
@@ -141,7 +141,7 @@ def test_delx_example_6_2():
          'fb_u(-m)', 'fb_d(f)'}
     ]
     # Act
-    actual_answer_sets = run_deolingo(example[1], all_models=True)
+    actual_answer_sets = solve(example[1], all_models=True)
     # Assert
     assert len(actual_answer_sets) == 2
     actual_answer_set_0 = set(actual_answer_sets[0])

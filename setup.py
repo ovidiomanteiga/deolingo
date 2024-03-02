@@ -15,7 +15,7 @@ setup(
     ],
     entry_points={
         'console_scripts': [
-            'deolingo=deolingo.main:main'
+            'deolingo=deolingo.__main__:main'
         ]
     },
     author='Ovidio M. Moar',

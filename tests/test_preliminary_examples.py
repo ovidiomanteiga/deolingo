@@ -1,5 +1,5 @@
 
-from deolingo.facade import run_deolingo, read_example
+from deolingo.lib import solve, read_example
 
 
 def test_preliminary_example_1():
@@ -7,7 +7,7 @@ def test_preliminary_example_1():
     example = read_example("preliminary/example1.lp")
     expected_answer_set = {"park", "pm_i(park)", "om_i(park)"}
     # Act
-    actual_answer_sets = run_deolingo(example[1])
+    actual_answer_sets = solve(example[1])
     # Assert
     assert len(actual_answer_sets) == 1
     actual_answer_set = set(actual_answer_sets[0])
@@ -21,7 +21,7 @@ def test_preliminary_example_2():
                            'pm_i(work)', '-om(work)', '-pm(-work)', 'om_d(work)', 'ob_nf(work)', 'ob_d(work)',
                            'fb_nf(-work)', '-work', '-weekend'}
     # Act
-    actual_answer_sets = run_deolingo(example[1])
+    actual_answer_sets = solve(example[1])
     # Assert
     assert len(actual_answer_sets) == 1
     actual_answer_set = set(actual_answer_sets[0])
@@ -32,7 +32,7 @@ def test_preliminary_example_3():
     # Arrange
     example = read_example("preliminary/example3.lp")
     # Act
-    actual_answer_sets = run_deolingo(example[1])
+    actual_answer_sets = solve(example[1])
     # Assert
     assert actual_answer_sets == []
 
@@ -49,7 +49,7 @@ def test_preliminary_example_4():
                            'ob_d(walk_right)', 'ob_d(walk)', 'fb_nf(walk)', 'fb_nv(-walk_right)', 'fb_nv(-walk)',
                            'fb_d(walk)'}
     # Act
-    actual_answer_sets = run_deolingo(example[1])
+    actual_answer_sets = solve(example[1])
     # Assert
     assert len(actual_answer_sets) == 1
     actual_answer_set = set(actual_answer_sets[0])
@@ -62,7 +62,7 @@ def test_preliminary_example_5():
     expected_answer_set = {'pm(fence)', 'fence', 'sea', '-fb(fence)', '-ob(-fence)', 'pm_i(white)', 'pm_i(fence)',
                            'om_i(white)', 'om_i(fence)', 'om(-fence)', 'pm_d(fence)', 'fb_d(fence)'}
     # Act
-    actual_answer_sets = run_deolingo(example[1])
+    actual_answer_sets = solve(example[1])
     # Assert
     assert len(actual_answer_sets) == 1
     actual_answer_set = set(actual_answer_sets[0])

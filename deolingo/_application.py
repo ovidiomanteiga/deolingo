@@ -6,7 +6,7 @@ import clingo
 import clingo.ast as ast
 
 import deolingo._version as deolingo_version
-from deolingo.facade import rewrite_atoms
+from deolingo._deontic_answer_set_rewriter import DeonticAnswerSetRewriter
 from deolingo._transformer import DeolingoTransformer
 
 
@@ -23,6 +23,7 @@ class DeolingoApplication(clingo.Application):
         self.program_name = "deolingo"
         self.version = deolingo_version.__version__
         self.translate_flag = clingo.Flag(False)
+        self.answer_set_rewriter = DeonticAnswerSetRewriter()
 
     def register_options(self, options: clingo.ApplicationOptions):
         """
@@ -38,7 +39,7 @@ class DeolingoApplication(clingo.Application):
         This function is called for each model of the problem.
         """
         atoms = model.symbols(shown=True)
-        rewritten_atoms = rewrite_atoms(atoms)
+        rewritten_atoms = self.answer_set_rewriter.rewrite_atoms(atoms)
         print("Answer: " + str(rewritten_atoms))
 
     def main(self, prg, files):

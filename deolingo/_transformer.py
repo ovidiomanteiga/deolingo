@@ -1,6 +1,6 @@
 from clingo.ast import parse_string
 
-from deolingo._deontic_ast_transformer import DeonticTransformer
+from deolingo._deontic_ast_transformer import DeonticASTTransformer
 
 from deolingo._deontic_atom import *
 
@@ -8,10 +8,7 @@ from deolingo._deontic_atom import *
 deolingo_theory = f"""
 #theory _deolingo_ {{
     deontic_term {{
-        & : 2, binary, left;
-        - : 3, unary;
-        ~ : 3, unary;
-        | : 1, binary, left
+        - : 1, unary
     }};
     show_term {{ / : 1, binary, left }};
     &{DeonticAtoms.OBLIGATORY.value.name}/0 : deontic_term, any;
@@ -46,7 +43,7 @@ deolingo_theory = f"""
 
 class DeolingoTransformer:
 
-    def __init__(self, add_to_program_callback, transformer=DeonticTransformer(), translate=False):
+    def __init__(self, add_to_program_callback, transformer=DeonticASTTransformer(), translate=False):
         self.deontic_transformer = transformer
         self._add_to_program_callback = add_to_program_callback
         self.translate = translate
