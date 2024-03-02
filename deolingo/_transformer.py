@@ -13,6 +13,7 @@ deolingo_theory = f"""
         ~ : 3, unary;
         | : 1, binary, left
     }};
+    show_term {{ / : 1, binary, left }};
     &{DeonticAtoms.OBLIGATORY.value.name}/0 : deontic_term, any;
     &{DeonticAtoms.FORBIDDEN.value.name}/0 : deontic_term, any;
     &{DeonticAtoms.OMISSIBLE.value.name}/0 : deontic_term, any;
@@ -37,7 +38,8 @@ deolingo_theory = f"""
     &{DeonticAtoms.NON_VIOLATED_PROHIBITION.value.name}/0 : deontic_term, any;
     &{DeonticAtoms.NON_FULFILLED_PROHIBITION.value.name}/0 : deontic_term, any;
     &{DeonticAtoms.UNDETERMINED_PROHIBITION.value.name}/0 : deontic_term, any;
-    &{DeonticAtoms.DEFAULT_PROHIBITION.value.name}/0 : deontic_term, any
+    &{DeonticAtoms.DEFAULT_PROHIBITION.value.name}/0 : deontic_term, any;
+    &show/0 : show_term, directive
 }}.
 """
 
@@ -56,6 +58,7 @@ class DeolingoTransformer:
         self._transform_and_add_source_inputs(inputs)
         self._add_common_deontic_rules()
         self._add_rules_for_each_deontic_atom()
+        self._add_show_directive()
 
     def _add_to_translation(self, statement):
         if self.translate:
@@ -184,3 +187,14 @@ class DeolingoTransformer:
         ]
         deontic_rules_as_string = "\n".join(deontic_rules) + '\n'
         self._add_string_to_program(deontic_rules_as_string)
+
+    def _add_show_directive(self):
+        show_atoms = self.deontic_transformer.show_atoms
+        if show_atoms is None or len(show_atoms) == 0:
+            return
+        show_directives = [f"\n% Show directives for deontic atoms"]
+        for show_atom in show_atoms:
+            show_directive = f"#show {show_atom}."
+            show_directives.append(show_directive)
+        show_directive = "\n".join(show_directives) + '\n'
+        self._add_string_to_program(show_directive)

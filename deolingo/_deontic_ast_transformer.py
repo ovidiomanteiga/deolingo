@@ -13,6 +13,7 @@ class DeonticTransformer(Transformer):
         self.deontic_atoms = set()
         self.translate = translate
         self.translated_program = ""
+        self.show_atoms = set()
 
     def _add_to_translation(self, location, statement):
         if self.translate:
@@ -50,4 +51,9 @@ class DeonticTransformer(Transformer):
         return new_rule
 
     def visit_TheoryAtom(self, atom):
+        if atom.term.name == "show":
+            for e in atom.elements:
+                da = DeonticAtoms.with_name(str(e.terms[0]))
+                if da is not None:
+                    self.show_atoms.add(da.value.prefixed() + "/1")
         return self.map_deontic_atom(atom)
