@@ -24,7 +24,7 @@ def solve(prog, all_models=False):
     def on_model(m):
         nonlocal models
         models += [rewriter.rewrite_model(m)]
-    solved = ctl.solve(on_model=on_model)
+    ctl.solve(on_model=on_model)
     for model in models:
         print("Answer: " + str(model))
     return models

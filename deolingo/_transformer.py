@@ -1,6 +1,8 @@
+import logging
+
 from clingo.ast import parse_string
 
-from deolingo._deontic_ast_transformer import DeonticASTTransformer
+from deolingo._deontic_ast_transformer import DeonticASTTransformer, SkipException
 
 from deolingo._deontic_atom import *
 
@@ -43,12 +45,11 @@ deolingo_theory = f"""
 
 class DeolingoTransformer:
 
-    def __init__(self, add_to_program_callback, transformer=DeonticASTTransformer(), translate=False):
-        self.deontic_transformer = transformer
+    def __init__(self, add_to_program_callback, transformer=None, translate=False):
+        self.deontic_transformer = transformer if transformer is not None else DeonticASTTransformer(translate)
         self._add_to_program_callback = add_to_program_callback
         self.translate = translate
         self.translated_program = ""
-        transformer.translate = translate
 
     def transform(self, inputs):
         self._add_string_to_program(deolingo_theory)
@@ -66,8 +67,11 @@ class DeolingoTransformer:
         self._add_to_translation(statement)
 
     def _transform_and_add_to_program(self, statement):
-        transformed_statement = self.deontic_transformer(statement)
-        self._add_to_program_callback(transformed_statement)
+        try:
+            transformed_statement = self.deontic_transformer(statement)
+            self._add_to_program_callback(transformed_statement)
+        except SkipException:
+            logging.log(level=logging.INFO, msg=f"Skipping statement: {statement}")
 
     def _transform_and_add_source_inputs(self, inputs):
         for source_input in inputs:

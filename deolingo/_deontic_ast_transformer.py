@@ -7,6 +7,10 @@ from clingox.ast import theory_term_to_term
 from deolingo._deontic_atom import DeonticAtoms
 
 
+class SkipException(Exception):
+    pass
+
+
 class DeonticASTTransformer(Transformer):
 
     def __init__(self, translate=False):
@@ -32,6 +36,7 @@ class DeonticASTTransformer(Transformer):
     def visit_TheoryAtom(self, atom):
         if atom.term.name == "show":
             self._map_show_atom(atom)
+            raise SkipException()
         return self._map_deontic_atom(atom)
 
     def _add_to_translation(self, location, statement):
