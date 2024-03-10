@@ -17,7 +17,7 @@ def test_preliminary_example_1():
 def test_preliminary_example_2():
     # Arrange
     example = read_example("preliminary/example2.lp")
-    expected_answer_set = {'&ob{work}', '-work', '-weekend'}
+    expected_answer_set = {'&obligatory{work}', '-work', '-weekend'}
     # Act
     actual_answer_sets = solve(example[1])
     # Assert
@@ -38,7 +38,7 @@ def test_preliminary_example_3():
 def test_preliminary_example_4():
     # Arrange
     example = read_example("preliminary/example4.lp")
-    expected_answer_set = {'walk', '&ob{walk_right}', '&ob{walk}', 'walk_right', '&fb{walk}'}
+    expected_answer_set = {'walk', '&obligatory{walk_right}', '&obligatory{walk}', 'walk_right', '&forbidden{walk}'}
     # Act
     actual_answer_sets = solve(example[1])
     # Assert
@@ -50,7 +50,7 @@ def test_preliminary_example_4():
 def test_preliminary_example_5():
     # Arrange
     example = read_example("preliminary/example5.lp")
-    expected_answer_set = {'&pm{fence}', 'fence', 'sea'}
+    expected_answer_set = {'&permitted{fence}', 'fence', 'sea'}
     # Act
     actual_answer_sets = solve(example[1])
     # Assert

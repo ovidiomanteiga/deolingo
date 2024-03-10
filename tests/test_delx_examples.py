@@ -5,7 +5,7 @@ from deolingo.lib import solve, read_example
 def test_delx_example_1_1():
     # Arrange
     example = read_example("delx/example1.1.lp")
-    expected_answer_set = {'&fb{f}'}
+    expected_answer_set = {'&forbidden{f}'}
     # Act
     actual_answer_sets = solve(example[1])
     # Assert
@@ -17,7 +17,7 @@ def test_delx_example_1_1():
 def test_delx_example_1_2():
     # Arrange
     example = read_example("delx/example1.2.lp")
-    expected_answer_set = {'&fb{f}'}
+    expected_answer_set = {'&forbidden{f}'}
     # Act
     actual_answer_sets = solve(example[1])
     # Assert
@@ -29,7 +29,7 @@ def test_delx_example_1_2():
 def test_delx_example_2():
     # Arrange
     example = read_example("delx/example2.lp")
-    expected_answer_set = {'&fb{f}'}
+    expected_answer_set = {'&forbidden{f}'}
     # Act
     actual_answer_sets = solve(example[1])
     # Assert
@@ -41,7 +41,7 @@ def test_delx_example_2():
 def test_delx_example_3():
     # Arrange
     example = read_example("delx/example3.lp")
-    expected_answer_set = {'f', '&ob{w}', '&ob{f}', '&ob{pay}', '&fb{f}'}
+    expected_answer_set = {'f', '&obligatory{w}', '&obligatory{f}', '&obligatory{pay}', '&forbidden{f}'}
     # Act
     actual_answer_sets = solve(example[1])
     # Assert
@@ -53,7 +53,7 @@ def test_delx_example_3():
 def test_delx_example_4():
     # Arrange
     example = read_example("delx/example4.lp")
-    expected_answer_set = {'&fb{f}'}
+    expected_answer_set = {'&forbidden{f}'}
     # Act
     actual_answer_sets = solve(example[1])
     # Assert
@@ -74,7 +74,7 @@ def test_delx_example_5_1():
 def test_delx_example_5_2():
     # Arrange
     example = read_example("delx/example5.2.lp")
-    expected_answer_set = {'f', '&ob{w}', '&ob{f}', '&fb{f}'}
+    expected_answer_set = {'f', '&obligatory{w}', '&obligatory{f}', '&forbidden{f}'}
     # Act
     actual_answer_sets = solve(example[1])
     # Assert
@@ -88,9 +88,9 @@ def test_delx_example_6_1():
     example = read_example("delx/example6.1.lp")
     expected_answer_sets = [
         # Model 1
-        {'-f', '&fb{m}', '&fb{f}'},
+        {'-f', '&forbidden{m}', '&forbidden{f}'},
         # Model 2
-        {'f', '&ob{w}', '&ob{m}', '&ob{f}', '&fb{f}'}
+        {'f', '&obligatory{w}', '&obligatory{m}', '&obligatory{f}', '&forbidden{f}'}
     ]
     # Act
     actual_answer_sets = solve(example[1], all_models=True)
@@ -107,9 +107,9 @@ def test_delx_example_6_2():
     example = read_example("delx/example6.2.lp")
     expected_answer_sets = [
         # Model 1
-        {'-f', '&fb{m}', '&fb{f}'},
+        {'-f', '&forbidden{m}', '&forbidden{f}'},
         # Model 2
-        {'f', '&ob{w}', '&ob{m}', '&ob{f}', '&fb{f}'}
+        {'f', '&obligatory{w}', '&obligatory{m}', '&obligatory{f}', '&forbidden{f}'}
     ]
     # Act
     actual_answer_sets = solve(example[1], all_models=True)

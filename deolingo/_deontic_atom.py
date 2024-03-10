@@ -23,11 +23,18 @@ def unprefix(atom):
 @dataclass
 class DeonticAtom:
 
-    name: str
+    short_name: str
     long_name: str
+
+    @property
+    def name(self):
+        return self.long_name
 
     def prefixed(self):
         return prefix(self.name)
+
+    def prefixed_short_name(self):
+        return prefix(self.short_name)
 
     def prefixed_long_name(self):
         return prefix(self.long_name)
