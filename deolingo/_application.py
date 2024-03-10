@@ -54,12 +54,6 @@ class DeolingoApplication(clingo.Application):
             if len(files) == 0:
                 files.append(sys.stdin)
             inputs = [f.read() for f in files]
-            # x = deolingo.lib.solve(inputs[0])
-            # print("INPUT")
-            # print(inputs[0])
-            # print("MODELS")
-            # print(x)
-            # return 0
             transformer = DeolingoTransformer(b.add, translate=self.translate_flag.flag)
             transformer.transform(inputs)
         if self.translate_flag.flag:
