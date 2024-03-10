@@ -1,7 +1,8 @@
 import logging
+from typing import Any, Dict
 
 from clingo import ast as ast
-from clingo.ast import Transformer
+from clingo.ast import Transformer, AST, ASTUpdate
 from clingox.ast import theory_term_to_term
 
 from deolingo._deontic_atom import DeonticAtoms
@@ -17,8 +18,8 @@ class DeonticASTTransformer(Transformer):
         super().__init__()
         self.deontic_atoms = set()
         self.translate = translate
-        self.translated_program = ""
         self.show_atoms = set()
+        self.translated_program = ""
 
     def visit_Rule(self, rule):
         new_head = rule.head
@@ -41,7 +42,8 @@ class DeonticASTTransformer(Transformer):
 
     def _add_to_translation(self, location, statement):
         if self.translate:
-            self.translated_program += f"\n% Source line: {location.begin.line}\n"
+            if location is not None:
+                self.translated_program += f"\n% Source line: {location.begin.line}\n"
             self.translated_program += str(statement) + "\n"
 
     def _map_deontic_atom(self, atom, as_literal=False):

@@ -1,4 +1,3 @@
-
 import clingo
 
 from deolingo._deontic_atom import DeonticAtoms, unprefix
@@ -18,11 +17,20 @@ class DeonticAnswerSetRewriter:
             if deontic_atom is None:
                 rewritten_atoms.append(str_atom)
                 continue
-            if deontic_atom in [DeonticAtoms.DEONTIC, DeonticAtoms.HOLDS]:
+            if is_negated or \
+                    deontic_atom not in [DeonticAtoms.OBLIGATORY, DeonticAtoms.FORBIDDEN,
+                                         DeonticAtoms.PERMITTED, DeonticAtoms.OMISSIBLE]:
                 continue
             str_atom = str_atom[1:] if is_negated else str_atom
             unprefixed = unprefix(str_atom)
-            rewritten = unprefixed if not is_negated else "-" + unprefixed
+            # remove the deontic atom name and the first parenthesis from str_atom
+            str_atom_int = unprefixed.replace(deontic_atom.value.name, "", 1)[1:]
+            is_negated_inside = str_atom_int.startswith("-")
+            if is_negated_inside:
+                continue
+            rewritten = "&" + unprefixed.replace("(", "{", 1)
+            rewritten = rewritten[::-1].replace(")", "}", 1)[::-1]
+            rewritten = rewritten if not is_negated else "-" + rewritten
             rewritten_atoms.append(rewritten)
         return rewritten_atoms
 

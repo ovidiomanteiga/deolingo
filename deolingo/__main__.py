@@ -3,6 +3,7 @@ import clingo
 import sys
 
 from deolingo._application import DeolingoApplication
+from deolingo.control import DeolingoControl
 
 
 def main():

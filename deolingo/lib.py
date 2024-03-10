@@ -3,30 +3,22 @@ from os import listdir
 from os.path import isfile, join, isdir
 from pathlib import Path
 
-import clingo
-import clingo.ast as ast
-
-from deolingo._deontic_answer_set_rewriter import DeonticAnswerSetRewriter
-from deolingo._transformer import DeolingoTransformer
+from deolingo.control import DeolingoControl
 
 
 def solve(prog, all_models=False):
-    ctl = clingo.Control()
+    ctl = DeolingoControl()
     if all_models:
         ctl.configuration.solve.models = 0
-    with ast.ProgramBuilder(ctl) as b:
-        transformer = DeolingoTransformer(b.add)
-        transformer.transform([prog])
-    ctl.ground([("base", [])])
+    ctl.add(prog)
+    ctl.ground()
     models = []
-    rewriter = DeonticAnswerSetRewriter()
 
-    def on_model(m):
+    def on_model(model):
         nonlocal models
-        models += [rewriter.rewrite_model(m)]
+        models.append(model)
+        return model
     ctl.solve(on_model=on_model)
-    for model in models:
-        print("Answer: " + str(model))
     return models
 
 

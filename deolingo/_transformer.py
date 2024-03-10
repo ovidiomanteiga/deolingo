@@ -50,25 +50,47 @@ class DeolingoTransformer:
         self._add_to_program_callback = add_to_program_callback
         self.translate = translate
         self.translated_program = ""
+        self._translated_part = ""
+        self._deolingo_theory_added = False
+        self._deontic_rules_added = False
+
+    def transform_source(self, source):
+        return self.transform([source])
 
     def transform(self, inputs):
-        self._add_string_to_program(deolingo_theory)
+        self._translated_part = ""
+        self._add_deolingo_theory()
         self._transform_and_add_source_inputs(inputs)
         self._add_common_deontic_rules()
         self._add_rules_for_each_deontic_atom()
         self._add_show_directive()
+        part = self._translated_part
+        self._translated_part = ""
+        return part
 
     def _add_to_translation(self, statement):
         if self.translate:
-            self.translated_program += str(statement)
+            statement_str = str(statement)
+            self.translated_program += statement_str
+            self._translated_part += statement_str
 
     def _add_string_to_program(self, statement):
         parse_string(statement, self._add_to_program_callback)
         self._add_to_translation(statement)
 
+    def _add_deolingo_theory(self):
+        if not self._deolingo_theory_added:
+            self._add_string_to_program(deolingo_theory)
+            self._deolingo_theory_added = True
+
     def _transform_and_add_to_program(self, statement):
         try:
+            self.deontic_transformer.translated_program = ""
             transformed_statement = self.deontic_transformer(statement)
+            if self.deontic_transformer.translated_program == "":
+                self._add_to_translation("\n" + str(transformed_statement))
+            else:
+                self._add_to_translation(self.deontic_transformer.translated_program)
             self._add_to_program_callback(transformed_statement)
         except SkipException:
             logging.log(level=logging.INFO, msg=f"Skipping statement: {statement}")
@@ -76,23 +98,23 @@ class DeolingoTransformer:
     def _transform_and_add_source_inputs(self, inputs):
         for source_input in inputs:
             parse_string(source_input, self._transform_and_add_to_program)
-        self._add_to_translation(self.deontic_transformer.translated_program)
 
     def _add_rules_for_each_deontic_atom(self):
         for deontic_atom in self.deontic_transformer.deontic_atoms:
             holds_positive = holds(deontic_atom)
             holds_negative = holds(f"-{deontic_atom}")
-            is_deontic = deontic(deontic_atom)
             rules = [
                 f"\n% Deontic atom rules for '{deontic_atom}'",
                 f"{holds_positive} :- {deontic_atom}.",
-                f"{holds_negative} :- -{deontic_atom}.",
-                f"{is_deontic}."
+                f"{holds_negative} :- -{deontic_atom}."
             ]
             rules_as_string = "\n".join(rules) + '\n'
             self._add_string_to_program(rules_as_string)
 
     def _add_common_deontic_rules(self):
+        if self._deontic_rules_added:
+            return
+        self._deontic_rules_added = True
         deontic_rules = [
             f"\n% Deontic axiom D for DELX",
             f":- {obligatory('X')}, {forbidden('X')}, not {holds('X')}, not {holds('-X')}.",
@@ -185,6 +207,11 @@ class DeolingoTransformer:
             # Default prohibition
             f"{default_prohibition('X')} :- {forbidden('X')}: not {permitted('X')}; {deontic('X')}.",
             f"{forbidden('X')} :- not {permitted('X')}, {default_prohibition('X')}.",
+            # Deontic
+            f"{deontic('X')} :- {obligatory('X')}.",
+            f"{deontic('X')} :- {obligatory('-X')}.",
+            f"{deontic('X')} :- {forbidden('X')}.",
+            f"{deontic('X')} :- {forbidden('-X')}.",
         ]
         deontic_rules_as_string = "\n".join(deontic_rules) + '\n'
         self._add_string_to_program(deontic_rules_as_string)
