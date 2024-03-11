@@ -7,7 +7,8 @@ from deolingo._transformer import DeolingoTransformer
 
 
 class DeolingoControl(Control):
-    def __init__(self, arguments: Sequence[str] = None, logger: Optional[Logger] = None, message_limit: int = 20):
+    def __init__(self, arguments: Sequence[str] = None, logger: Optional[Logger] = None, message_limit: int = 20,
+                 grouped=False):
         if arguments is None:
             arguments = []
         super().__init__(arguments, logger, message_limit)
@@ -16,7 +17,7 @@ class DeolingoControl(Control):
         self._transformer = DeolingoTransformer(self._program_builder.add, translate=True)
         translated = self._transformer.transform("")
         super()._add2("base", [], translated)
-        self._rewriter = DeonticAnswerSetRewriter()
+        self._rewriter = DeonticAnswerSetRewriter(grouped=grouped)
 
     def _add2(self, name: str, parameters: Sequence[str], program: str) -> None:
         translated = self._transformer.transform_source(program)

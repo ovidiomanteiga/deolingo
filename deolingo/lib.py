@@ -6,8 +6,8 @@ from pathlib import Path
 from deolingo.control import DeolingoControl
 
 
-def solve(prog, all_models=False):
-    ctl = DeolingoControl()
+def solve(prog, all_models=False, grouped=False):
+    ctl = DeolingoControl(grouped=grouped)
     if all_models:
         ctl.configuration.solve.models = 0
     ctl.add(prog)

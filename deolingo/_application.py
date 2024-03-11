@@ -24,6 +24,7 @@ class DeolingoApplication(clingo.Application):
         self.program_name = "deolingo"
         self.version = deolingo_version.__version__
         self.translate_flag = clingo.Flag(False)
+        self.ungrouped_flag = clingo.Flag(False)
         self.answer_set_rewriter = DeonticAnswerSetRewriter()
 
     def register_options(self, options: clingo.ApplicationOptions):
@@ -33,6 +34,8 @@ class DeolingoApplication(clingo.Application):
         # add an option to translate the deontic logic program into an ASP program
         options.add_flag("deontic", "translate",
                          "Translate a deontic logic program into an ASP program", self.translate_flag)
+        options.add_flag("deontic", "ungrouped",
+                         "Do not group the answer sets deontic worlds", self.ungrouped_flag)
 
     def print_model(self, model: clingo.Model, printer: Callable[[], None] = None):
         """
@@ -40,8 +43,17 @@ class DeolingoApplication(clingo.Application):
         This function is called for each model of the problem.
         """
         atoms = model.symbols(shown=True)
-        rewritten_atoms = self.answer_set_rewriter.rewrite_atoms(atoms)
-        print("Answer: " + str(rewritten_atoms))
+        grouped = not self.ungrouped_flag.flag
+        self.answer_set_rewriter.grouped = grouped
+        rewritten_atoms, ob, fb = self.answer_set_rewriter.rewrite_atoms(atoms)
+        if grouped:
+            print('Answer:')
+            print(f'FACTS: [{ ", ".join(rewritten_atoms) }]')
+            print(f'OBLIGATIONS: [{ ", ".join(ob) }]')
+            print(f'PROHIBITIONS: [{ ", ".join(fb) }]')
+            print()
+        else:
+            print("Answer: " + str(rewritten_atoms))
 
     def main(self, prg, files):
         """
