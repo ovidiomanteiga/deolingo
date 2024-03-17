@@ -2,7 +2,7 @@ import logging
 
 from clingo.ast import parse_string
 
-from deolingo._deontic_ast_transformer import DeonticASTTransformer, SkipException
+from deolingo._deontic_ast_transformer import DeonticASTTransformer, MultipleRuleException
 
 from deolingo._deontic_atom import *
 
@@ -63,7 +63,6 @@ class DeolingoTransformer:
         self._transform_and_add_source_inputs(inputs)
         self._add_common_deontic_rules()
         self._add_rules_for_each_deontic_atom()
-        self._add_show_directive()
         part = self._translated_part
         self._translated_part = ""
         return part
@@ -92,8 +91,12 @@ class DeolingoTransformer:
             else:
                 self._add_to_translation(self.deontic_transformer.translated_program)
             self._add_to_program_callback(transformed_statement)
-        except SkipException:
-            logging.log(level=logging.INFO, msg=f"Skipping statement: {statement}")
+        except MultipleRuleException as mr:
+            if mr.line is not None:
+                self.translated_program += f"\n% Source line: {mr.line.begin.line}\n"
+            for r in mr.rules:
+                self._add_to_translation(str(r) + "\n")
+                self._add_to_program_callback(r)
 
     def _transform_and_add_source_inputs(self, inputs):
         for source_input in inputs:
@@ -215,14 +218,3 @@ class DeolingoTransformer:
         ]
         deontic_rules_as_string = "\n".join(deontic_rules) + '\n'
         self._add_string_to_program(deontic_rules_as_string)
-
-    def _add_show_directive(self):
-        show_atoms = self.deontic_transformer.show_atoms
-        if show_atoms is None or len(show_atoms) == 0:
-            return
-        show_directives = [f"\n% Show directives for deontic atoms"]
-        for show_atom in show_atoms:
-            show_directive = f"#show {show_atom}."
-            show_directives.append(show_directive)
-        show_directive = "\n".join(show_directives) + '\n'
-        self._add_string_to_program(show_directive)
