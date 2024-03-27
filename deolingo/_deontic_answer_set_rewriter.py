@@ -55,7 +55,7 @@ class DeonticAnswerSetRewriter:
         if self.grouped:
             return {'facts': list(rewritten_atoms),
                     'obligations': list(ob),
-                    'prohibitions': list(fb) }
+                    'prohibitions': list(fb)}
         else:
             return rewritten_atoms
 

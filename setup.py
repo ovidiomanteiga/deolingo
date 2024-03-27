@@ -10,7 +10,7 @@ setup(
     packages=find_packages(),
     include_package_data=True,
     install_requires=[
-        'clingo>=5.6.0',
+        'clingo>=5.7.1',
         'clingox>=1.2.0'
     ],
     entry_points={

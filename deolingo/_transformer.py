@@ -79,7 +79,8 @@ class DeolingoTransformer:
 
     def _add_deolingo_theory(self):
         if not self._deolingo_theory_added:
-            self._add_string_to_program(deolingo_theory)
+            #parse_string(deolingo_theory, self._add_to_program_callback)
+            #self._add_string_to_program(deolingo_theory)
             self._deolingo_theory_added = True
 
     def _transform_and_add_to_program(self, statement):
@@ -157,10 +158,12 @@ class DeolingoTransformer:
             f"{omissible('X')} :- {optional('X')}.",
             f"{permitted('X')} :- {optional('X')}.",
             # Permitted by default
-            f"{permitted_by_default('X')} :- {permitted('X')}: not {forbidden('X')}; {deontic('X')}.",
+            f"{permitted_by_default('X')} :- not not {forbidden('X')}; {deontic('X')}.",
+            f"{permitted_by_default('X')} :- {permitted('X')}; {deontic('X')}.",
             f"{permitted('X')} :- not {forbidden('X')}, {permitted_by_default('X')}.",
             # Omissible by default
-            f"{omissible_by_default('X')} :- {omissible('X')}: not {obligatory('X')}; {deontic('X')}.",
+            f"{omissible_by_default('X')} :- not not {obligatory('X')}; {deontic('X')}.",
+            f"{omissible_by_default('X')} :- {omissible('X')}; {deontic('X')}.",
             f"{omissible('X')} :- not {obligatory('X')}, {omissible_by_default('X')}.",
             # Obligation violation
             f"{violated_obligation('X')} :- {obligatory('X')}, {holds('-X')}.",
@@ -184,7 +187,8 @@ class DeolingoTransformer:
             f"not {holds('X')} :- {undetermined_obligation('X')}.",
             f"not {holds('-X')} :- {undetermined_obligation('X')}.",
             # Default obligation
-            f"{default_obligation('X')} :- {obligatory('X')}: not {permitted('-X')}; {deontic('X')}.",
+            f"{default_obligation('X')} :- not not {permitted('-X')}; {deontic('X')}.",
+            f"{default_obligation('X')} :- {obligatory('X')}; {deontic('X')}.",
             f"{obligatory('X')} :- not {permitted('-X')}, {default_obligation('X')}.",
             # Violated prohibition
             f"{violated_prohibition('X')} :- {forbidden('X')}, {holds('X')}.",
@@ -208,7 +212,8 @@ class DeolingoTransformer:
             f"not {holds('X')} :- {undetermined_prohibition('X')}.",
             f"not {holds('-X')} :- {undetermined_prohibition('X')}.",
             # Default prohibition
-            f"{default_prohibition('X')} :- {forbidden('X')}: not {permitted('X')}; {deontic('X')}.",
+            f"{default_prohibition('X')} :- not not {permitted('X')}; {deontic('X')}.",
+            f"{default_prohibition('X')} :- {forbidden('X')}; {deontic('X')}.",
             f"{forbidden('X')} :- not {permitted('X')}, {default_prohibition('X')}.",
             # Deontic
             f"{deontic('X')} :- {obligatory('X')}.",

@@ -36,6 +36,10 @@ class DeonticASTTransformer(Transformer):
         self._in_head = False
         self._in_rule = False
 
+    def visit_Comment(self, comment):
+        self._add_to_translation(comment.location, comment)
+        return comment
+
     def visit_Rule(self, rule):
         self._in_rule = True
         self._in_head = True
@@ -108,9 +112,11 @@ class DeonticASTTransformer(Transformer):
             self.translated_program += str(statement) + "\n"
 
     def _map_deontic_atom_with_sequence(self, atom):
+        if len(atom.elements) < 1:
+            raise Exception(f"Empty deontic atom '{atom}'")
         deontic_atom = DeonticAtoms.with_name(atom.term.name)
-        if len(atom.elements) < 1 or deontic_atom is None:
-            return False, atom
+        if deontic_atom is None:
+            raise Exception(f"Deontic atom '{atom.term}' not found")
         new_name = deontic_atom.value.prefixed()
         new_terms = [{'term': theory_term_to_term(the_term.terms[0]), 'condition': the_term.condition}
                      for the_term in atom.elements]
