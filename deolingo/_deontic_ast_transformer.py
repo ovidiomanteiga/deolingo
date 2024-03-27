@@ -65,6 +65,7 @@ class DeonticASTTransformer(Transformer):
         return new_rule
 
     def visit_Literal(self, literal):
+        self._last_literal_sign = None
         if literal.atom.ast_type == ast.ASTType.TheoryAtom:
             self._last_literal_sign = literal.sign
         self.visit(literal.atom)
