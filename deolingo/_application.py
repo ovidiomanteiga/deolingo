@@ -51,13 +51,12 @@ class DeolingoApplication(clingo.Application):
         self.answer_set_rewriter.grouped = grouped
         rewritten_atoms, ob, fb = self.answer_set_rewriter.rewrite_atoms(atoms)
         if grouped:
-            print('Answer:')
-            print(f'FACTS: [{", ".join(rewritten_atoms)}]')
-            print(f'OBLIGATIONS: [{", ".join(ob)}]')
-            print(f'PROHIBITIONS: [{", ".join(fb)}]')
+            print(f'FACTS: {", ".join(rewritten_atoms)}')
+            print(f'OBLIGATIONS: {", ".join(ob)}')
+            print(f'PROHIBITIONS: {", ".join(fb)}')
             print()
         else:
-            print("Answer: " + str(rewritten_atoms))
+            print(", ".join(rewritten_atoms))
 
     def print_text_explanations(self, x_control: xclingo.XclingoControl):
         n = 0
