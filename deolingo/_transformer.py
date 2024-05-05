@@ -10,7 +10,9 @@ from deolingo._deontic_atom import *
 deolingo_theory = f"""
 #theory _deolingo_ {{
     deontic_term {{
-        - : 2, unary;
+        - : 4, unary;
+        && : 3, binary, left;
+        || : 2, binary, left;
         | : 1, binary, left
     }};
     show_term {{ / : 1, binary, left }};
@@ -111,7 +113,9 @@ class DeolingoTransformer:
             rules = [
                 f"\n% Deontic atom rules for '{deontic_atom}'",
                 f"{holds_positive} :- {deontic_atom}.",
-                f"{holds_negative} :- -{deontic_atom}."
+                f"{holds_negative} :- -{deontic_atom}.",
+                f"{deontic_atom} :- {holds_positive}.",
+                f"-{deontic_atom} :- {holds_negative}."
             ]
             rules_as_string = "\n".join(rules) + '\n'
             self._add_string_to_program(rules_as_string)

@@ -1,6 +1,6 @@
-
 import copy
 
+import clingox.pprint
 from clingo import ast as ast
 from clingo.ast import Transformer
 from clingox.ast import theory_term_to_term, theory_term_to_literal
@@ -50,6 +50,7 @@ class DeonticASTTransformer(Transformer):
         return comment
 
     def visit_Rule(self, rule):
+        #clingox.pprint.pprint(rule)
         self._in_rule = True
         self._in_head = True
         self._head_theory_atoms_sequence = []
@@ -90,7 +91,7 @@ class DeonticASTTransformer(Transformer):
                 self._deontic_conditional = deontic_conditional
             if not iterable:
                 return atom
-            conditional_literals = [ast.ConditionalLiteral(atom.term.location, lit['term'], lit['condition']) 
+            conditional_literals = [ast.ConditionalLiteral(atom.term.location, lit['term'], lit['condition'])
                                     if lit['condition'] is not None else lit['term']
                                     for lit in literals]
             self._head_theory_atoms_sequence.extend(conditional_literals)
@@ -100,9 +101,9 @@ class DeonticASTTransformer(Transformer):
                 raise Exception(f"Deontic conditional '{deontic_conditional}' not allowed in body")
             if not iterable:
                 return atom
-            conditional_literals = [ast.ConditionalLiteral(atom.term.location, lit['term'], lit['condition']) 
-                        if lit['condition'] is not None else lit['term']
-                        for lit in literals]
+            conditional_literals = [ast.ConditionalLiteral(atom.term.location, lit['term'], lit['condition'])
+                                    if lit['condition'] is not None else lit['term']
+                                    for lit in literals]
             self._body_theory_atoms_sequence.extend(conditional_literals)
         return atom
 
@@ -111,8 +112,8 @@ class DeonticASTTransformer(Transformer):
             new_head_elements = self._filter_out_theory_atoms_and_literals_of_theory_atoms(
                 new_head.elements) if new_head.ast_type == ast.ASTType.Disjunction else []
             if self._deontic_conditional is not None:
-                new_rule = ast.Rule(rule.location, 
-                                    self._deontic_conditional.term, 
+                new_rule = ast.Rule(rule.location,
+                                    self._deontic_conditional.term,
                                     [self._deontic_conditional.condition])
                 new_rule_2 = copy.deepcopy(new_rule)
                 ob_nv_atom_name = DeonticAtoms.NON_VIOLATED_OBLIGATION.value.prefixed()
@@ -148,12 +149,19 @@ class DeonticASTTransformer(Transformer):
         new_name = deontic_atom.value.prefixed()
         sign = self._last_literal_sign if self._last_literal_sign is not None else ast.Sign.NoSign
         new_deontic_atoms = []
+
         def symbolize_terms(terms):
             new_terms = [theory_term_to_term(t) for t in terms]
             for t in new_terms:
                 if t.ast_type != ast.ASTType.Variable:
                     new_deontic_atoms.append(t)
             return _symbolic_literal(atom.term.location, sign, new_name, new_terms)
+        is_disjunction = _DeonticDisjunctionOrConjunction.transform_deontic_atom(atom, operator="||")
+        if is_disjunction and self._in_body:
+            raise Exception(f"Disjunction '{atom}' not allowed in body")
+        is_conjunction = _DeonticDisjunctionOrConjunction.transform_deontic_atom(atom, operator="&&")
+        if is_conjunction and self._in_head:
+            raise Exception(f"Conjunction '{atom}' not allowed in head")
         new_atoms = [{'term': symbolize_terms(the_term.terms), 'condition': the_term.condition}
                      for the_term in atom.elements]
         for new_deontic_atom in new_deontic_atoms:
@@ -188,7 +196,7 @@ class _DeonticConditional:
         self.condition = condition
         self.string_repr = string_repr
         self.symbolic_term = symbolic_term
-    
+
     @staticmethod
     def from_deontic_atom(atom):
         if len(atom.elements) < 1:
@@ -199,18 +207,54 @@ class _DeonticConditional:
         deontic_atom_prefixed = deontic_atom.value.prefixed()
         for element in atom.elements:
             is_conditional = len(element.terms) == 1 and \
-                element.terms[0].ast_type == ast.ASTType.TheoryUnparsedTerm and \
-                len(element.terms[0].elements) == 2 and \
-                element.terms[0].elements[0].ast_type == ast.ASTType.TheoryUnparsedTermElement and \
-                element.terms[0].elements[1].ast_type == ast.ASTType.TheoryUnparsedTermElement and \
-                element.terms[0].elements[1].operators[0] == "|"
+                             element.terms[0].ast_type == ast.ASTType.TheoryUnparsedTerm and \
+                             len(element.terms[0].elements) == 2 and \
+                             element.terms[0].elements[0].ast_type == ast.ASTType.TheoryUnparsedTermElement and \
+                             element.terms[0].elements[1].ast_type == ast.ASTType.TheoryUnparsedTermElement and \
+                             element.terms[0].elements[1].operators[0] == "|"
             if is_conditional:
                 #clingox.pprint.pprint(atom)
                 symbolic_term = theory_term_to_term(element.terms[0].elements[0].term)
                 term = _symbolic_literal(atom.location, ast.Sign.NoSign, deontic_atom_prefixed, [symbolic_term])
                 condition = theory_term_to_literal(element.terms[0].elements[1].term)
-                return _DeonticConditional(deontic_atom_prefixed, term, condition, symbolic_term, str(atom)) 
+                return _DeonticConditional(deontic_atom_prefixed, term, condition, symbolic_term, str(atom))
         return None
+
+    def __str__(self):
+        return self.string_repr
+
+
+class _DeonticDisjunctionOrConjunction:
+
+    @staticmethod
+    def transform_deontic_atom(atom, operator="||"):
+        if len(atom.elements) < 1:
+            return None
+        deontic_atom = DeonticAtoms.with_name(atom.term.name)
+        if deontic_atom is None:
+            return None
+        new_elements = []
+        contains_operation = False
+        for element in atom.elements:
+            is_operation = False
+            for term in element.terms:
+                if term.ast_type == ast.ASTType.TheoryUnparsedTerm and len(term.elements) > 1:
+                    pass
+                else:
+                    continue
+                is_operation = term.elements[0].ast_type == ast.ASTType.TheoryUnparsedTermElement and \
+                               all(x.ast_type == ast.ASTType.TheoryUnparsedTermElement and x.operators[0] == operator
+                                   for x in term.elements[1:])
+                if is_operation:
+                    for el in term.elements:
+                        new_element_term = theory_term_to_term(el.term)
+                        new_element = ast.TheoryAtomElement([new_element_term], [])
+                        new_elements.append(new_element)
+            contains_operation = contains_operation or is_operation
+            if not is_operation:
+                new_elements.append(element)
+        atom.elements = new_elements
+        return contains_operation
 
     def __str__(self):
         return self.string_repr
