@@ -1,23 +1,31 @@
+
 from typing import Sequence, Optional, overload, Union, Tuple, Callable
 
 from clingo import Control, Logger, ast, Symbol, Model, StatisticsMap, SolveResult, SolveHandle
 
-from deolingo._deontic_answer_set_rewriter import DeonticAnswerSetRewriter
-from deolingo._transformer import DeolingoTransformer
+from deolingo._answer_set_rewriter import DeonticAnswerSetRewriter
+from deolingo._translator import DeolingoTranslator
 
 
 class DeolingoControl(Control):
-    def __init__(self, arguments: Sequence[str] = None, logger: Optional[Logger] = None, message_limit: int = 20,
-                 grouped=False):
+    """Extends the clingo.Control class to translate and solve deontic logic programs."""
+
+    # <editor-fold desc="Initialization">
+
+    def __init__(self, arguments: Sequence[str] = None, logger: Optional[Logger] = None,
+                 message_limit: int = 20, grouped=False):
         if arguments is None:
             arguments = []
         super().__init__(arguments, logger, message_limit)
         self._translate_control = Control(arguments, logger, message_limit)
         self._program_builder = ast.ProgramBuilder(self._translate_control)
-        self._transformer = DeolingoTransformer(self._program_builder.add, translate=True)
-        translated = self._transformer.transform("")
-        super()._add2("base", [], translated)
+        self._transformer = DeolingoTranslator(self._program_builder.add, translate=True)
         self._rewriter = DeonticAnswerSetRewriter(grouped=grouped)
+        self._add_deolingo_theory_and_deontic_rules()
+
+    # </editor-fold>
+
+    # <editor-fold desc="clingo.Control override">
 
     def _add2(self, name: str, parameters: Sequence[str], program: str) -> None:
         translated = self._transformer.transform_source(program)
@@ -37,7 +45,18 @@ class DeolingoControl(Control):
         return super().solve(assumptions, self._on_model(on_model), on_unsat, on_statistics,
                              on_finish, on_core, yield_, async_)
 
+    # </editor-fold>
+
+    # <editor-fold desc="Private methods">
+
+    def _add_deolingo_theory_and_deontic_rules(self):
+        translated = self._transformer.transform_sources("")
+        super()._add2("base", [], translated)
+
     def _on_model(self, on_model_callback):
+        """On model callback wrapper that rewrites the atoms of the model."""
         if on_model_callback is None:
             return None
-        return lambda m: on_model_callback(self._rewriter.rewrite_model(m))
+        return lambda model: on_model_callback(self._rewriter.rewrite_model(model))
+
+    # </editor-fold>

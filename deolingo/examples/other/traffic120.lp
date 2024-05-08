@@ -34,7 +34,7 @@ speed_violation(Owner, FineAmount, Points, Criminal) :-
 points_deducted_from_license(Owner, Points) :- speed_violation(Owner, _, Points, _).
 
 % If the owner of a car has violated the speed limit to the extent it is a criminal offense, they might go to jail.
-can_go_to_jail(Owner, Criminal) :- speed_violation(Owner, _, _, Criminal).
+can_go_to_jail(Owner) :- speed_violation(Owner, _, _, "yes").
 
 % Cars and their owners
 car(audi; mercedes; ferrari).
@@ -57,4 +57,4 @@ speed(ferrari, 195).
 &show{obligatory; forbidden}.
 #show max_speed/2.
 #show points_deducted_from_license/2.
-#show can_go_to_jail/2.
+#show can_go_to_jail/1.

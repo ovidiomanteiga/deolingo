@@ -1,6 +1,6 @@
+
 import copy
 
-import clingox.pprint
 from clingo import ast as ast
 from clingo.ast import Transformer
 from clingox.ast import theory_term_to_term, theory_term_to_literal
@@ -8,29 +8,9 @@ from clingox.ast import theory_term_to_term, theory_term_to_literal
 from deolingo._deontic_atom import DeonticAtoms
 
 
-class MultipleRuleException(Exception):
-    def __init__(self, rules, line=None):
-        self.rules = rules
-        self.line = line
-
-
-def _positive_literal(location, atom):
-    return ast.Literal(location, ast.Sign.NoSign, atom)
-
-
-def _negative_literal(location, atom):
-    return ast.Literal(location, ast.Sign.Negation, atom)
-
-
-def _symbolic_atom(location, name, terms):
-    return ast.SymbolicAtom(ast.Function(location, name, terms, False))
-
-
-def _symbolic_literal(location, sign, atom_name, terms):
-    return ast.Literal(location, sign, _symbolic_atom(location, atom_name, terms))
-
-
 class DeonticASTTransformer(Transformer):
+
+    # <editor-fold desc="Initialization">
 
     def __init__(self, translate=False):
         super().__init__()
@@ -45,12 +25,15 @@ class DeonticASTTransformer(Transformer):
         self._in_rule = False
         self._deontic_conditional = None
 
+    # </editor-fold>
+
+    # <editor-fold desc="clingo.ast.Transformer override">
+
     def visit_Comment(self, comment):
         self._add_to_translation(comment.location, comment)
         return comment
 
     def visit_Rule(self, rule):
-        #clingox.pprint.pprint(rule)
         self._in_rule = True
         self._in_head = True
         self._head_theory_atoms_sequence = []
@@ -68,8 +51,8 @@ class DeonticASTTransformer(Transformer):
         assert new_head is not None
         assert new_body is not None
         if multi_rule is not None:
-            for r in multi_rule:
-                r.body.extend(new_body)
+            for rule in multi_rule:
+                rule.body.extend(new_body)
             raise MultipleRuleException(multi_rule, rule.location)
         new_rule = ast.Rule(rule.location, new_head, new_body)
         self._add_to_translation(rule.location, new_rule)
@@ -106,6 +89,10 @@ class DeonticASTTransformer(Transformer):
                                     for lit in literals]
             self._body_theory_atoms_sequence.extend(conditional_literals)
         return atom
+
+    # </editor-fold>
+
+    # <editor-fold desc="Private methods">
 
     def _process_theory_atoms_in_head(self, multi_rule, new_head, rule):
         if new_head.ast_type == ast.ASTType.Disjunction or new_head.ast_type == ast.ASTType.TheoryAtom:
@@ -174,19 +161,35 @@ class DeonticASTTransformer(Transformer):
 
     def _map_show_atom(self, atom):
         show_atoms = set()
-        for e in atom.elements:
-            da = DeonticAtoms.with_name(str(e.terms[0]))
-            if da is not None:
-                show_atoms.add(da.value.prefixed())
+        for element in atom.elements:
+            deontic_atom = DeonticAtoms.with_name(str(element.terms[0]))
+            if deontic_atom is not None:
+                show_atoms.add(deontic_atom.value.prefixed())
         show_rules = []
         for sa in show_atoms:
             show_rules.append(ast.ShowSignature(atom.location, sa, 1, 1))
         raise MultipleRuleException(show_rules, atom.location)
 
     def _filter_out_theory_atoms_and_literals_of_theory_atoms(self, elements):
-        return [e for e in elements if e.ast_type != ast.ASTType.TheoryAtom and
-                (e.ast_type != ast.ASTType.Literal or e.atom.ast_type != ast.ASTType.TheoryAtom)]
+        return [element for element in elements
+                if element.ast_type != ast.ASTType.TheoryAtom and
+                (element.ast_type != ast.ASTType.Literal or
+                 element.atom.ast_type != ast.ASTType.TheoryAtom)]
 
+    # </editor-fold>
+
+
+# <editor-fold desc="Exception classes">
+
+class MultipleRuleException(Exception):
+    def __init__(self, rules, line=None):
+        self.rules = rules
+        self.line = line
+
+# </editor-fold>
+
+
+# <editor-fold desc="Private classes">
 
 class _DeonticConditional:
 
@@ -213,7 +216,6 @@ class _DeonticConditional:
                              element.terms[0].elements[1].ast_type == ast.ASTType.TheoryUnparsedTermElement and \
                              element.terms[0].elements[1].operators[0] == "|"
             if is_conditional:
-                #clingox.pprint.pprint(atom)
                 symbolic_term = theory_term_to_term(element.terms[0].elements[0].term)
                 term = _symbolic_literal(atom.location, ast.Sign.NoSign, deontic_atom_prefixed, [symbolic_term])
                 condition = theory_term_to_literal(element.terms[0].elements[1].term)
@@ -256,5 +258,24 @@ class _DeonticDisjunctionOrConjunction:
         atom.elements = new_elements
         return contains_operation
 
-    def __str__(self):
-        return self.string_repr
+# </editor-fold>
+
+
+# <editor-fold desc="Helper functions">
+
+def _positive_literal(location, atom):
+    return ast.Literal(location, ast.Sign.NoSign, atom)
+
+
+def _negative_literal(location, atom):
+    return ast.Literal(location, ast.Sign.Negation, atom)
+
+
+def _symbolic_atom(location, name, terms):
+    return ast.SymbolicAtom(ast.Function(location, name, terms, False))
+
+
+def _symbolic_literal(location, sign, atom_name, terms):
+    return ast.Literal(location, sign, _symbolic_atom(location, atom_name, terms))
+
+# </editor-fold>

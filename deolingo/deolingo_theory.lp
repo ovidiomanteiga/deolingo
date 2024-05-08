@@ -1,7 +1,9 @@
 
 #theory _deolingo_ {
     deontic_term {
-        - : 2, unary;
+        - : 4, unary;
+        && : 3, binary, left;
+        || : 2, binary, left;
         | : 1, binary, left
     };
     show_term { / : 1, binary, left };

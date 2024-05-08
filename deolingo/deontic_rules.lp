@@ -91,7 +91,7 @@ _deolingo_violated_prohibition(X) :- _deolingo_forbidden(X), _deolingo_holds(X).
 _deolingo_forbidden(X) :- _deolingo_violated_prohibition(X).
 _deolingo_holds(X) :- _deolingo_violated_prohibition(X).
 
-% Fulfilled obligation
+% Fulfilled prohibition
 _deolingo_fulfilled_prohibition(X) :- _deolingo_forbidden(X), _deolingo_holds(-X).
 _deolingo_forbidden(X) :- _deolingo_fulfilled_prohibition(X).
 _deolingo_holds(-X) :- _deolingo_fulfilled_prohibition(X).

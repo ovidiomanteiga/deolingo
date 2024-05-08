@@ -1,13 +1,13 @@
+
 import sys
 from typing import Callable
 
 import clingo
 import clingo.ast as ast
-import xclingo
 
 import deolingo._version as deolingo_version
-from deolingo._deontic_answer_set_rewriter import DeonticAnswerSetRewriter
-from deolingo._transformer import DeolingoTransformer
+from deolingo._answer_set_rewriter import DeonticAnswerSetRewriter
+from deolingo._translator import DeolingoTranslator
 from deolingo.xcontrol import XDeolingoControl
 
 
@@ -17,29 +17,51 @@ class DeolingoApplication(clingo.Application):
     Rewrites the incoming deontic logic programs into deontic ASP programs and solves them.
     """
 
+    # <editor-fold desc="Initialization">
+
     def __init__(self):
         """
-        Initializes the application setting the program name.
-        See clingo.clingo_main().
+        Initializes the application setting the program name. See clingo.clingo_main().
         """
         self.program_name = "deolingo"
         self.version = deolingo_version.__version__
-        self.translate_flag = clingo.Flag(False)
-        self.ungrouped_flag = clingo.Flag(False)
-        self.explain_flag = clingo.Flag(False)
-        self.answer_set_rewriter = DeonticAnswerSetRewriter()
+        self._translate_flag = clingo.Flag(False)
+        self._ungrouped_flag = clingo.Flag(False)
+        self._explain_flag = clingo.Flag(False)
+        self._answer_set_rewriter = DeonticAnswerSetRewriter()
+        self._xcontrol = None
+
+    # </editor-fold>
+
+    # <editor-fold desc="clingo.Application override">
+
+    def main(self, prg, files):
+        """
+        This function implements the Application.main() function as required by
+        clingo.clingo_main().
+        """
+        inputs = self._read_source_inputs_from_files(files)
+        if self._explain_flag.flag:
+            return self._run_with_xcontrol(inputs)
+        else:
+            self._run_with_clingo_control(prg, inputs)
 
     def register_options(self, options: clingo.ApplicationOptions):
         """
         Registers the options for the application.
         """
-        # add an option to translate the deontic logic program into an ASP program
-        options.add_flag("deontic", "translate",
-                         "Translate a deontic logic program into an ASP program", self.translate_flag)
-        options.add_flag("deontic", "ungrouped",
-                         "Do not group the answer sets deontic worlds", self.ungrouped_flag)
-        options.add_flag("deontic", "explain",
-                         "Use Xclingo to generate explanations", self.explain_flag)
+        options.add_flag("deontic",
+                         "translate",
+                         "Translate a deontic logic program into an ASP program",
+                         self._translate_flag)
+        options.add_flag("deontic",
+                         "ungrouped",
+                         "Do not group the answer sets deontic worlds",
+                         self._ungrouped_flag)
+        options.add_flag("deontic",
+                         "explain",
+                         "Use Xclingo to generate explanations",
+                         self._explain_flag)
 
     def print_model(self, model: clingo.Model, printer: Callable[[], None] = None):
         """
@@ -47,56 +69,60 @@ class DeolingoApplication(clingo.Application):
         This function is called for each model of the problem.
         """
         atoms = model.symbols(shown=True)
-        grouped = not self.ungrouped_flag.flag
-        self.answer_set_rewriter.grouped = grouped
-        rewritten_atoms, ob, fb = self.answer_set_rewriter.rewrite_atoms(atoms)
+        grouped = not self._ungrouped_flag.flag
+        self._answer_set_rewriter._grouped = grouped
+        rewritten_facts, obligations, prohibitions = self._answer_set_rewriter.rewrite_atoms(atoms)
         if grouped:
-            print(f'FACTS: {", ".join(rewritten_atoms)}')
-            print(f'OBLIGATIONS: {", ".join(ob)}')
-            print(f'PROHIBITIONS: {", ".join(fb)}')
+            print(f'FACTS: {", ".join(rewritten_facts)}')
+            print(f'OBLIGATIONS: {", ".join(obligations)}')
+            print(f'PROHIBITIONS: {", ".join(prohibitions)}')
             print()
         else:
-            print(", ".join(rewritten_atoms))
+            print(", ".join(rewritten_facts))
 
-    def print_text_explanations(self, x_control: xclingo.XclingoControl):
-        n = 0
-        for answer in x_control.explain():
-            n += 1
-            print(f'Answer {1}')
-            for expl in answer:
-                print(expl.ascii_tree())
+    # </editor-fold>
 
-    def main(self, prg, files):
-        """
-        Implements the incremental solving loop.
-        This function implements the Application.main() function as required by
-        clingo.clingo_main().
-        """
-        files = [open(f) for f in files]
+    # <editor-fold desc="Private methods">
+
+    @staticmethod
+    def _read_source_inputs_from_files(files):
+        files = [open(file) for file in files]
         if len(files) == 0:
             files.append(sys.stdin)
-        inputs = [f.read() for f in files]
-        if self.explain_flag.flag:
-            xprg = XDeolingoControl(n_solutions='0', n_explanations='0', auto_trace='none')
+        inputs = [file.read() for file in files]
+        return inputs
 
-            def xadd(statement: ast.AST) -> None:
-                xprg.add("base", [], str(statement))
-
-            transformer = DeolingoTransformer(xadd, translate=True)
-            transformer.transform(inputs)
-            xprg.add("base", [], transformer.translated_program)
-            if self.translate_flag.flag:
-                print(xprg.rewritten_program)
-                return
-            xprg.ground([("base", [])])
-            self.print_text_explanations(xprg)
-            return
-        with ast.ProgramBuilder(prg) as b:
-            transformer = DeolingoTransformer(b.add, translate=self.translate_flag.flag)
-            transformer.transform(inputs)
-        if self.translate_flag.flag:
+    def _run_with_clingo_control(self, prg, inputs):
+        with ast.ProgramBuilder(prg) as builder:
+            transformer = DeolingoTranslator(builder.add, translate=self._translate_flag.flag)
+            transformer.transform_sources(inputs)
+        if self._translate_flag.flag:
             print(transformer.translated_program)
             return
         prg.configuration.solve.quiet = True
         prg.ground([("base", [])])
         prg.solve(on_model=None, async_=False)
+
+    def _run_with_xcontrol(self, inputs):
+        self._xcontrol = XDeolingoControl(n_solutions='0', n_explanations='0', auto_trace='none')
+        transformer = DeolingoTranslator(self._add_to_xcontrol, translate=True)
+        transformer.transform_sources(inputs)
+        self._xcontrol.add("base", [], transformer.translated_program)
+        if self._translate_flag.flag:
+            print(self._xcontrol.rewritten_program)
+            return
+        self._xcontrol.ground([("base", [])])
+        self._print_text_explanations()
+
+    def _print_text_explanations(self):
+        n = 0
+        for answer in self._xcontrol.explain():
+            n += 1
+            print(f'Answer {n}')
+            for expl in answer:
+                print(expl.ascii_tree())
+
+    def _add_to_xcontrol(self, statement: ast.AST) -> None:
+        self._xcontrol.add("base", [], str(statement))
+
+    # </editor-fold>
