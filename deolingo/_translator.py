@@ -1,5 +1,5 @@
 
-from clingo.ast import parse_string
+from clingo.ast import parse_string, parse_files
 
 from deolingo._ast_transformer import DeonticASTTransformer, MultipleRuleException
 
@@ -29,11 +29,11 @@ class DeolingoTranslator:
         """Transforms the source input and adds it to the program."""
         return self.transform_sources([source])
 
-    def transform_sources(self, inputs):
+    def transform_sources(self, inputs, files=None):
         """Transforms the source inputs and adds them to the program."""
         self._translated_part = ""
         self._add_deolingo_theory()
-        self._transform_and_add_source_inputs(inputs)
+        self._transform_and_add_source_inputs(inputs, files)
         self._add_common_deontic_rules()
         self._add_rules_for_each_deontic_atom()
         part = self._translated_part
@@ -51,15 +51,16 @@ class DeolingoTranslator:
             self.translated_program += statement_str
             self._translated_part += statement_str
 
-    def _add_string_to_program(self, statement):
+    def _add_string_to_program(self, statement, add_to_translation=True):
         """Add the statement to the program and to the translated program if necessary."""
         parse_string(statement, self._add_to_program_callback)
-        self._add_to_translation(statement)
+        if add_to_translation:
+            self._add_to_translation(statement)
 
     def _add_deolingo_theory(self):
         """Add the Deolingo theory to the program if it has not been added yet."""
         if not self._deolingo_theory_added:
-            self._add_string_to_program(_DEOLINGO_THEORY)
+            self._add_string_to_program(_DEOLINGO_THEORY, add_to_translation=not self.translate)
             self._deolingo_theory_added = True
 
     def _transform_and_add_to_program(self, statement):
@@ -82,8 +83,11 @@ class DeolingoTranslator:
             self._add_to_translation(str(rule) + "\n")
             self._add_to_program_callback(rule)
 
-    def _transform_and_add_source_inputs(self, inputs):
+    def _transform_and_add_source_inputs(self, inputs, files=None):
         """Parses the source inputs, transforms them and adds them to the program."""
+        if files is not None:
+            parse_files(files, self._transform_and_add_to_program)
+            return
         for source_input in inputs:
             parse_string(source_input, self._transform_and_add_to_program)
 

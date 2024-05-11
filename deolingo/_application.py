@@ -30,26 +30,22 @@ class DeolingoApplication(clingo.Application):
         self._explain_flag = clingo.Flag(False)
         self._answer_set_rewriter = DeonticAnswerSetRewriter()
         self._xcontrol = None
+        self._set_output_format_if_translating()
 
     # </editor-fold>
 
     # <editor-fold desc="clingo.Application override">
 
-    def main(self, prg, files):
-        """
-        This function implements the Application.main() function as required by
-        clingo.clingo_main().
-        """
-        inputs = self._read_source_inputs_from_files(files)
+    def main(self, program, files):
+        """This function implements the Application.main() function as required by clingo.clingo_main()."""
         if self._explain_flag.flag:
+            inputs = self._read_source_inputs_from_files(files)
             return self._run_with_xcontrol(inputs)
         else:
-            self._run_with_clingo_control(prg, inputs)
+            self._run_with_clingo_control(program, files)
 
     def register_options(self, options: clingo.ApplicationOptions):
-        """
-        Registers the options for the application.
-        """
+        """Registers the options for the application."""
         options.add_flag("deontic",
                          "translate",
                          "Translate a deontic logic program into an ASP program",
@@ -64,10 +60,8 @@ class DeolingoApplication(clingo.Application):
                          self._explain_flag)
 
     def print_model(self, model: clingo.Model, printer: Callable[[], None] = None):
-        """
-        Prints the atoms of the given model.
-        This function is called for each model of the problem.
-        """
+        """Prints the atoms of the given model.
+        This function is called for each model of the problem."""
         atoms = model.symbols(shown=True)
         grouped = not self._ungrouped_flag.flag
         self._answer_set_rewriter._grouped = grouped
@@ -85,6 +79,15 @@ class DeolingoApplication(clingo.Application):
     # <editor-fold desc="Private methods">
 
     @staticmethod
+    def _set_output_format_if_translating():
+        if "--translate" not in sys.argv:
+            return
+        for arg in sys.argv:
+            if arg.startswith("--outf="):
+                sys.argv.remove(arg)
+        sys.argv.append("--outf=3")
+
+    @staticmethod
     def _read_source_inputs_from_files(files):
         files = [open(file) for file in files]
         if len(files) == 0:
@@ -92,16 +95,16 @@ class DeolingoApplication(clingo.Application):
         inputs = [file.read() for file in files]
         return inputs
 
-    def _run_with_clingo_control(self, prg, inputs):
-        with ast.ProgramBuilder(prg) as builder:
+    def _run_with_clingo_control(self, program, files):
+        with ast.ProgramBuilder(program) as builder:
             transformer = DeolingoTranslator(builder.add, translate=self._translate_flag.flag)
-            transformer.transform_sources(inputs)
+            transformer.transform_sources(None, files)
         if self._translate_flag.flag:
             print(transformer.translated_program)
             return
-        prg.configuration.solve.quiet = True
-        prg.ground([("base", [])])
-        prg.solve(on_model=None, async_=False)
+        program.configuration.solve.quiet = True
+        program.ground([("base", [])])
+        program.solve(on_model=None, async_=False)
 
     def _run_with_xcontrol(self, inputs):
         self._xcontrol = XDeolingoControl(n_solutions='0', n_explanations='0', auto_trace='none')

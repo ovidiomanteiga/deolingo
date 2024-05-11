@@ -24,12 +24,15 @@ class DeonticASTTransformer(Transformer):
         self._in_head = False
         self._in_rule = False
         self._deontic_conditional = None
+        self._file = None
 
     # </editor-fold>
 
     # <editor-fold desc="clingo.ast.Transformer override">
 
     def visit_Comment(self, comment):
+        if not comment.value.startswith("%!"):
+            raise MultipleRuleException([])
         self._add_to_translation(comment.location, comment)
         return comment
 
@@ -116,6 +119,9 @@ class DeonticASTTransformer(Transformer):
     def _add_to_translation(self, location, statement):
         if self.translate:
             if location is not None:
+                if self._file != location.end.filename:
+                    self._file = location.end.filename
+                    self.translated_program += f"\n% File: {location.end.filename}\n"
                 self.translated_program += f"\n% Source line: {location.begin.line}\n"
             self.translated_program += str(statement) + "\n"
 
