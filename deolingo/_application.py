@@ -29,6 +29,7 @@ class DeolingoApplication(clingo.Application):
         self._ungrouped_flag = clingo.Flag(False)
         self._explain_flag = clingo.Flag(False)
         self._benchmark_flag = clingo.Flag(False)
+        self._generate_flag = clingo.Flag(False)
         self._answer_set_rewriter = DeonticAnswerSetRewriter()
         self._xcontrol = None
         self._set_output_format_if_translating()
@@ -41,6 +42,9 @@ class DeolingoApplication(clingo.Application):
         """This function implements the Application.main() function as required by clingo.clingo_main()."""
         if self._benchmark_flag.flag:
             return self._run_benchmark()
+        if self._generate_flag.flag:
+            inputs = self._read_source_inputs_from_files(files)
+            return self._generate_deontic_program(inputs)
         if self._explain_flag.flag:
             inputs = self._read_source_inputs_from_files(files)
             return self._run_with_xcontrol(inputs)
@@ -65,6 +69,10 @@ class DeolingoApplication(clingo.Application):
                          "benchmark",
                          "Run benchmark with all examples and print the results",
                          self._benchmark_flag)
+        options.add_flag("deontic",
+                         "generate",
+                         "Generates a deontic logic program from a given natural language input",
+                         self._generate_flag)
 
     def print_model(self, model: clingo.Model, printer: Callable[[], None] = None):
         """Prints the atoms of the given model.
@@ -100,6 +108,12 @@ class DeolingoApplication(clingo.Application):
         runner = BenchmarkRunner()
         runner.run_benchmark()
         runner.print_results()
+
+    def _generate_deontic_program(self, inputs):
+        from deolingo._generator import DeonticProgramGenerator, Generator
+        generator = DeonticProgramGenerator(generator=Generator.GEMINI)
+        program = generator.generate_program(inputs[0])
+        print(program)
 
     @staticmethod
     def _read_source_inputs_from_files(files):
