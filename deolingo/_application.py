@@ -136,9 +136,7 @@ class DeolingoApplication(clingo.Application):
 
     def _run_with_xcontrol(self, inputs):
         self._xcontrol = XDeolingoControl(n_solutions='0', n_explanations='0', auto_trace='none')
-        transformer = DeolingoTranslator(self._add_to_xcontrol, translate=True)
-        transformer.transform_sources(inputs)
-        self._xcontrol.add("base", [], transformer.translated_program)
+        self._xcontrol.add_inputs(inputs)
         if self._translate_flag.flag:
             print(self._xcontrol.rewritten_program)
             return
@@ -152,8 +150,5 @@ class DeolingoApplication(clingo.Application):
             print(f'Answer {n}')
             for expl in answer:
                 print(expl.ascii_tree())
-
-    def _add_to_xcontrol(self, statement: ast.AST) -> None:
-        self._xcontrol.add("base", [], str(statement))
 
     # </editor-fold>
