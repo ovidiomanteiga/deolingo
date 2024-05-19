@@ -30,6 +30,7 @@ class DeolingoApplication(clingo.Application):
         self._explain_flag = clingo.Flag(False)
         self._benchmark_flag = clingo.Flag(False)
         self._generate_flag = clingo.Flag(False)
+        self._temporal_flag = clingo.Flag(False)
         self._answer_set_rewriter = DeonticAnswerSetRewriter()
         self._xcontrol = None
         self._set_output_format_if_translating()
@@ -40,6 +41,8 @@ class DeolingoApplication(clingo.Application):
 
     def main(self, program, files):
         """This function implements the Application.main() function as required by clingo.clingo_main()."""
+        if self._temporal_flag.flag:
+            return self._run_with_telingo(program, files)
         if self._benchmark_flag.flag:
             return self._run_benchmark()
         if self._generate_flag.flag:
@@ -48,8 +51,7 @@ class DeolingoApplication(clingo.Application):
         if self._explain_flag.flag:
             inputs = self._read_source_inputs_from_files(files)
             return self._run_with_xcontrol(inputs)
-        else:
-            self._run_with_clingo_control(program, files)
+        self._run_with_clingo_control(program, files)
 
     def register_options(self, options: clingo.ApplicationOptions):
         """Registers the options for the application."""
@@ -73,6 +75,10 @@ class DeolingoApplication(clingo.Application):
                          "generate",
                          "Generates a deontic logic program from a given natural language input",
                          self._generate_flag)
+        options.add_flag("deontic",
+                         "temporal",
+                         "Runs a temporal deontic logic program in Telingo",
+                         self._temporal_flag)
 
     def print_model(self, model: clingo.Model, printer: Callable[[], None] = None):
         """Prints the atoms of the given model.
@@ -150,5 +156,25 @@ class DeolingoApplication(clingo.Application):
             print(f'Answer {n}')
             for expl in answer:
                 print(expl.ascii_tree())
+
+    def _run_with_telingo(self, program, files):
+        with ast.ProgramBuilder(program) as builder:
+            transformer = DeolingoTranslator(builder.add, translate=True)
+            transformer.transform_sources(None, files)
+        tcontrol = clingo.Control()
+        tprogram = transformer.translated_program
+        tprogram = tprogram.replace("_deolingo_", "deolingo_")
+        import telingo
+        tapp = telingo.TelApp()
+        import tempfile
+        print(tprogram)
+        # Create a named temporary file (automatically deleted on close)
+        with tempfile.NamedTemporaryFile(mode="w+t", delete=False) as temp_file:
+            temp_file.write(tprogram)
+            temp_file.seek(0)  # Rewind to the beginning of the file
+            clingo.clingo_main(tapp, [temp_file.name])
+            temp_file.close()  # Important: close the file first to release the handle
+            import os
+            os.remove(temp_file.name)
 
     # </editor-fold>

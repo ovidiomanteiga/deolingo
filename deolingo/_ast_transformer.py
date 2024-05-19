@@ -69,6 +69,8 @@ class DeonticASTTransformer(Transformer):
         return literal
 
     def visit_TheoryAtom(self, atom):
+        if atom.term.name == "tel":
+            return atom
         if atom.term.name == "show":
             self._map_show_atom(atom)
         if self._in_head:
@@ -130,6 +132,8 @@ class DeonticASTTransformer(Transformer):
             raise Exception(f"Empty deontic atom '{atom}'")
         deontic_atom = DeonticAtoms.with_name(atom.term.name)
         if deontic_atom is None:
+            if atom.term.name == "tel":
+                return True, [atom], None
             raise Exception(f"Deontic atom '{atom.term}' not found")
         deontic_conditional = _DeonticConditional.from_deontic_atom(atom)
         if deontic_conditional is not None:
@@ -178,9 +182,14 @@ class DeonticASTTransformer(Transformer):
 
     def _filter_out_theory_atoms_and_literals_of_theory_atoms(self, elements):
         return [element for element in elements
-                if element.ast_type != ast.ASTType.TheoryAtom and
+                if (element.ast_type != ast.ASTType.TheoryAtom and
                 (element.ast_type != ast.ASTType.Literal or
-                 element.atom.ast_type != ast.ASTType.TheoryAtom)]
+                 element.atom.ast_type != ast.ASTType.TheoryAtom)) or
+                (element.ast_type == ast.ASTType.TheoryAtom and element.term.name == "tel") or
+                (element.ast_type == ast.ASTType.Literal and
+                 element.atom.ast_type == ast.ASTType.TheoryAtom and
+                 element.atom.term.name == "tel")
+                ]
 
     # </editor-fold>
 

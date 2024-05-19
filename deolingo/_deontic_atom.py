@@ -11,13 +11,23 @@ class DeonticAtom:
 
     short_name: str
     long_name: str
+    is_tel_next: bool = False
+    is_tel_prev: bool = False
+    is_tel_init: bool = False
 
     @property
     def name(self):
         return self.long_name
 
     def prefixed(self):
-        return self.prefix(self.name)
+        pre_name = self.prefix(self.name)
+        if self.is_tel_prev:
+            return "'" + pre_name
+        if self.is_tel_next:
+            return pre_name + "'"
+        if self.is_tel_init:
+            return "_" + pre_name
+        return pre_name
 
     def prefixed_short_name(self):
         return self.prefix(self.short_name)
@@ -82,8 +92,19 @@ class DeonticAtoms(Enum):
     @classmethod
     def with_name(cls, name):
         """Returns the deontic atom with the given name."""
+        is_tel_prev = name.startswith("'")
+        is_tel_next = name.endswith("'")
+        is_tel_init = name.startswith("_")
+        is_tel = is_tel_prev or is_tel_next
+        if is_tel_prev or is_tel_next:
+            name = name.replace("'", "")
+        if is_tel_init:
+            name = name[1:]
         for atom in cls.get_all():
             if atom.value.name == name:
+                atom.value.is_tel_prev = is_tel_prev
+                atom.value.is_tel_next = is_tel_next
+                atom.value.is_tel_init = is_tel_init
                 return atom
         return None
 
