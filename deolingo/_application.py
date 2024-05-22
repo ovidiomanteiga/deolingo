@@ -7,6 +7,7 @@ import clingo.ast as ast
 
 import deolingo._version as deolingo_version
 from deolingo._answer_set_rewriter import DeonticAnswerSetRewriter
+from deolingo._generator import Generator
 from deolingo._translator import DeolingoTranslator
 from deolingo.xcontrol import XDeolingoControl
 
@@ -30,6 +31,7 @@ class DeolingoApplication(clingo.Application):
         self._explain_flag = clingo.Flag(False)
         self._benchmark_flag = clingo.Flag(False)
         self._generate_flag = clingo.Flag(False)
+        self._generator = None
         self._temporal_flag = clingo.Flag(False)
         self._answer_set_rewriter = DeonticAnswerSetRewriter()
         self._xcontrol = None
@@ -75,6 +77,15 @@ class DeolingoApplication(clingo.Application):
                          "generate",
                          "Generates a deontic logic program from a given natural language input",
                          self._generate_flag)
+
+        def parser(value: str):
+            try:
+                self._generator = Generator(value)
+                return True
+            except ValueError:
+                return False
+        options.add("deontic", "generator", "Generative AI API to user in --generate mode",
+                    parser, False, "gemini|gpt4all|openai|huggingfacehub")
         options.add_flag("deontic",
                          "temporal",
                          "Runs a temporal deontic logic program in Telingo",
@@ -117,7 +128,7 @@ class DeolingoApplication(clingo.Application):
 
     def _generate_deontic_program(self, inputs):
         from deolingo._generator import DeonticProgramGenerator, Generator
-        generator = DeonticProgramGenerator(generator=Generator.GEMINI)
+        generator = DeonticProgramGenerator(generator=self._generator)
         program = generator.generate_program(inputs[0])
         print(program)
 
