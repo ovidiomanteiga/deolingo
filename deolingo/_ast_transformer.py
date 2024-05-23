@@ -80,7 +80,7 @@ class DeonticASTTransformer(Transformer):
             if not iterable:
                 return atom
             conditional_literals = [ast.ConditionalLiteral(atom.term.location, lit['term'], lit['condition'])
-                                    if lit['condition'] is not None else lit['term']
+                                    if lit['condition'] is not None and lit['condition'] != [] else lit['term']
                                     for lit in literals]
             self._head_theory_atoms_sequence.extend(conditional_literals)
         elif self._in_body:
@@ -90,7 +90,7 @@ class DeonticASTTransformer(Transformer):
             if not iterable:
                 return atom
             conditional_literals = [ast.ConditionalLiteral(atom.term.location, lit['term'], lit['condition'])
-                                    if lit['condition'] is not None else lit['term']
+                                    if lit['condition'] is not None and lit['condition'] != [] else lit['term']
                                     for lit in literals]
             self._body_theory_atoms_sequence.extend(conditional_literals)
         return atom
