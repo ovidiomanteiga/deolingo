@@ -7,7 +7,7 @@ import clingo.ast as ast
 
 import deolingo._version as deolingo_version
 from deolingo._answer_set_rewriter import DeonticAnswerSetRewriter
-from deolingo._generator import Generator
+from deolingo._rewriting_translator import DeolingoRewritingTranslator
 from deolingo._translator import DeolingoTranslator
 from deolingo.xcontrol import XDeolingoControl
 
@@ -31,6 +31,7 @@ class DeolingoApplication(clingo.Application):
         self._explain_flag = clingo.Flag(False)
         self._benchmark_flag = clingo.Flag(False)
         self._generate_flag = clingo.Flag(False)
+        self._optimize_flag = clingo.Flag(False)
         self._generator = None
         self._temporal_flag = clingo.Flag(False)
         self._answer_set_rewriter = DeonticAnswerSetRewriter()
@@ -77,8 +78,13 @@ class DeolingoApplication(clingo.Application):
                          "generate",
                          "Generates a deontic logic program from a given natural language input",
                          self._generate_flag)
+        options.add_flag("deontic",
+                         "optimize",
+                         "Optimize the translation of the deontic logic program",
+                         self._optimize_flag)
 
         def parser(value: str):
+            from deolingo._generator import Generator
             try:
                 self._generator = Generator(value)
                 return True
@@ -142,7 +148,10 @@ class DeolingoApplication(clingo.Application):
 
     def _run_with_clingo_control(self, program, files):
         with ast.ProgramBuilder(program) as builder:
-            transformer = DeolingoTranslator(builder.add, translate=self._translate_flag.flag)
+            if self._optimize_flag.flag:
+                transformer = DeolingoRewritingTranslator(builder.add, translate=self._translate_flag.flag)
+            else:
+                transformer = DeolingoTranslator(builder.add, translate=self._translate_flag.flag)
             transformer.transform_sources(None, files)
         if self._translate_flag.flag:
             print(transformer.translated_program)
