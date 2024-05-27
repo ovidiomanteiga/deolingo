@@ -108,27 +108,47 @@ class DeonticRules:
     def obligation_violation_fulfillment():
         return [
             f"\n% Obligation violation",
-            f"{violated_obligation('X')} :- {obligatory('X')}, {holds('-X')}.",
+            DeonticRules.derive_violated_obligation(),
             f"{obligatory('X')} :- {violated_obligation('X')}.",
             f"{holds('-X')} :- {violated_obligation('X')}.",
             f"\n% Fulfilled obligation",
-            f"{fulfilled_obligation('X')} :- {obligatory('X')}, {holds('X')}.",
+            DeonticRules.derive_fulfilled_obligation(),
             f"{obligatory('X')} :- {fulfilled_obligation('X')}.",
             f"{holds('X')} :- {fulfilled_obligation('X')}.",
             f"\n% Non-fulfilled obligation",
-            f"{non_fulfilled_obligation('X')} :- {obligatory('X')}, not {holds('X')}.",
+            DeonticRules.derive_non_fulfilled_obligation(),
             f"{obligatory('X')} :- {non_fulfilled_obligation('X')}.",
             f"not {holds('X')} :- {non_fulfilled_obligation('X')}.",
             f"\n% Non-violated obligation",
-            f"{non_violated_obligation('X')} :- {obligatory('X')}, not {holds('-X')}.",
+            DeonticRules.derive_non_violated_obligation(),
             f"{obligatory('X')} :- {non_violated_obligation('X')}.",
             f"not {holds('-X')} :- {non_violated_obligation('X')}.",
             f"\n% Undetermined obligation",
-            f"{undetermined_obligation('X')} :- {obligatory('X')}, not {holds('X')}, not {holds('-X')}.",
+            DeonticRules.derive_undetermined_obligation(),
             f"{obligatory('X')} :- {undetermined_obligation('X')}.",
             f"not {holds('X')} :- {undetermined_obligation('X')}.",
             f"not {holds('-X')} :- {undetermined_obligation('X')}.",
         ]
+
+    @staticmethod
+    def derive_violated_obligation():
+        return f"{violated_obligation('X')} :- {obligatory('X')}, {holds('-X')}."
+
+    @staticmethod
+    def derive_fulfilled_obligation():
+        return f"{fulfilled_obligation('X')} :- {obligatory('X')}, {holds('X')}."
+
+    @staticmethod
+    def derive_non_fulfilled_obligation():
+        return f"{non_fulfilled_obligation('X')} :- {obligatory('X')}, not {holds('X')}."
+
+    @staticmethod
+    def derive_non_violated_obligation():
+        return f"{non_violated_obligation('X')} :- {obligatory('X')}, not {holds('-X')}."
+
+    @staticmethod
+    def derive_undetermined_obligation():
+        return f"{undetermined_obligation('X')} :- {obligatory('X')}, not {holds('X')}, not {holds('-X')}."
 
     @staticmethod
     def default_obligation():
@@ -143,27 +163,49 @@ class DeonticRules:
     def prohibition_violation_fulfillment():
         return [
             f"\n% Violated prohibition",
-            f"{violated_prohibition('X')} :- {forbidden('X')}, {holds('X')}.",
+            DeonticRules.derive_violated_prohibition(),
             f"{forbidden('X')} :- {violated_prohibition('X')}.",
             f"{holds('X')} :- {violated_prohibition('X')}.",
             f"\n% Fulfilled prohibition",
-            f"{fulfilled_prohibition('X')} :- {forbidden('X')}, {holds('-X')}.",
+            DeonticRules.derive_fulfilled_prohibition(),
             f"{forbidden('X')} :- {fulfilled_prohibition('X')}.",
             f"{holds('-X')} :- {fulfilled_prohibition('X')}.",
             f"\n% Non-fulfilled prohibition",
-            f"{non_fulfilled_prohibition('X')} :- {forbidden('X')}, not {holds('-X')}.",
+            DeonticRules.derive_non_fulfilled_prohibition(),
             f"{forbidden('X')} :- {non_fulfilled_prohibition('X')}.",
             f"not {holds('-X')} :- {non_fulfilled_prohibition('X')}.",
             f"\n% Non-violated prohibition",
-            f"{non_violated_prohibition('X')} :- {forbidden('X')}, not {holds('X')}.",
+            DeonticRules.derive_non_violated_prohibition(),
             f"{forbidden('X')} :- {non_violated_prohibition('X')}.",
             f"not {holds('X')} :- {non_violated_prohibition('X')}.",
             f"\n% Undetermined prohibition",
-            f"{undetermined_prohibition('X')} :- {forbidden('X')}, not {holds('X')}, not {holds('-X')}.",
+            DeonticRules.derive_undetermined_prohibition(),
             f"{forbidden('X')} :- {undetermined_prohibition('X')}.",
             f"not {holds('X')} :- {undetermined_prohibition('X')}.",
             f"not {holds('-X')} :- {undetermined_prohibition('X')}.",
         ]
+
+    # same as above but with prohibition
+
+    @staticmethod
+    def derive_violated_prohibition():
+        return f"{violated_prohibition('X')} :- {forbidden('X')}, {holds('X')}."
+
+    @staticmethod
+    def derive_fulfilled_prohibition():
+        return f"{fulfilled_prohibition('X')} :- {forbidden('X')}, {holds('-X')}."
+
+    @staticmethod
+    def derive_non_fulfilled_prohibition():
+        return f"{non_fulfilled_prohibition('X')} :- {forbidden('X')}, not {holds('-X')}."
+
+    @staticmethod
+    def derive_non_violated_prohibition():
+        return f"{non_violated_prohibition('X')} :- {forbidden('X')}, not {holds('X')}."
+
+    @staticmethod
+    def derive_undetermined_prohibition():
+        return f"{undetermined_prohibition('X')} :- {forbidden('X')}, not {holds('X')}, not {holds('-X')}."
 
     @staticmethod
     def default_prohibition():

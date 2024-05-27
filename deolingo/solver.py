@@ -1,11 +1,14 @@
 
 from deolingo.control import DeolingoControl
+from deolingo.rewriting_control import DeolingoRewritingControl
 
 
 class DeolingoSolver:
 
-    def __init__(self, all_models=False, grouped=False, control=None):
-        self._control = control if control is not None else DeolingoControl(grouped=grouped)
+    def __init__(self, all_models=False, grouped=False, control=None, optimize=False):
+        self._control = control if control is not None \
+            else DeolingoRewritingControl(grouped=grouped) if optimize \
+            else DeolingoControl(grouped=grouped)
         self._all_models = all_models
         self._models = []
         if all_models:

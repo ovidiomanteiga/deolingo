@@ -4,6 +4,7 @@ from typing import Sequence, Optional, overload, Union, Tuple, Callable
 from clingo import Control, Logger, ast, Symbol, Model, StatisticsMap, SolveResult, SolveHandle
 
 from deolingo._answer_set_rewriter import DeonticAnswerSetRewriter
+from deolingo._rewriting_translator import DeolingoRewritingTranslator
 from deolingo._translator import DeolingoTranslator
 
 
@@ -13,13 +14,14 @@ class DeolingoControl(Control):
     # <editor-fold desc="Initialization">
 
     def __init__(self, arguments: Sequence[str] = None, logger: Optional[Logger] = None,
-                 message_limit: int = 20, grouped=False):
+                 message_limit: int = 20, grouped=False, optimize=False):
         if arguments is None:
             arguments = []
         super().__init__(arguments, logger, message_limit)
         self._translate_control = Control(arguments, logger, message_limit)
         self._program_builder = ast.ProgramBuilder(self._translate_control)
-        self._transformer = DeolingoTranslator(self._program_builder.add, translate=True)
+        self._transformer = DeolingoRewritingTranslator(self._program_builder.add, translate=True) if optimize \
+            else DeolingoTranslator(self._program_builder.add, translate=True)
         self._rewriter = DeonticAnswerSetRewriter(grouped=grouped)
         self._add_deolingo_theory_and_deontic_rules()
 

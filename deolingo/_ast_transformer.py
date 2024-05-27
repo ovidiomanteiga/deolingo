@@ -73,14 +73,17 @@ class DeonticASTTransformer(Transformer):
             return atom
         if atom.term.name == "show":
             self._map_show_atom(atom)
+
+        def has_valid_condition(lit):
+            return 'condition' in lit and lit['condition'] is not None and \
+                lit['condition'] != []
         if self._in_head:
             iterable, literals, deontic_conditional = self._map_deontic_atom_with_sequence(atom)
             if deontic_conditional is not None:
                 self._deontic_conditional = deontic_conditional
             if not iterable:
                 return atom
-            conditional_literals = [ast.ConditionalLiteral(atom.term.location, lit['term'], lit['condition'])
-                                    if lit['condition'] is not None and lit['condition'] != [] else lit['term']
+            conditional_literals = [ast.ConditionalLiteral(atom.term.location, lit['term'], lit['condition'] or [])
                                     for lit in literals]
             self._head_theory_atoms_sequence.extend(conditional_literals)
         elif self._in_body:
@@ -90,7 +93,7 @@ class DeonticASTTransformer(Transformer):
             if not iterable:
                 return atom
             conditional_literals = [ast.ConditionalLiteral(atom.term.location, lit['term'], lit['condition'])
-                                    if lit['condition'] is not None and lit['condition'] != [] else lit['term']
+                                    if has_valid_condition(lit) else lit['term']
                                     for lit in literals]
             self._body_theory_atoms_sequence.extend(conditional_literals)
         return atom

@@ -15,7 +15,6 @@ class DeolingoRewritingControl(DeolingoControl):
 
     def __init__(self, arguments: Sequence[str] = None, logger: Optional[Logger] = None,
                  message_limit: int = 20, grouped=False):
-        super().__init__(arguments, logger, message_limit, grouped)
-        self._transformer = DeolingoRewritingTranslator(self._program_builder.add, translate=True)
+        super().__init__(arguments, logger, message_limit, grouped, optimize=True)
 
     # </editor-fold>

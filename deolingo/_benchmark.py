@@ -6,6 +6,7 @@ import prettytable.prettytable
 from deolingo.examples import ExampleReader
 
 from deolingo.control import DeolingoControl
+from deolingo.rewriting_control import DeolingoRewritingControl
 
 
 class BenchmarkRunner:
@@ -16,7 +17,7 @@ class BenchmarkRunner:
     """
 
     def __init__(self):
-        self.solvers = [DeolingoControl]
+        self.solvers = [DeolingoControl, DeolingoRewritingControl]
         self._example_reader = ExampleReader()
         table = prettytable.PrettyTable()
         table.field_names = ["Example", "Solver", "Time (s)", "CPU Time (s)", "Rules", "Atoms"]

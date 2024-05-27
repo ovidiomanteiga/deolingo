@@ -14,6 +14,15 @@ class DeonticASTRewritingTransformer(DeonticASTTransformer):
 
     def __init__(self, translate=False):
         super().__init__(translate=translate)
+        self._derivation_rules_to_be_added = set()
+
+    # </editor-fold>
+
+    # <editor-fold desc="Getters/Setters">
+
+    @property
+    def derivation_rules_to_be_added(self):
+        return self._derivation_rules_to_be_added
 
     # </editor-fold>
 
@@ -24,14 +33,17 @@ class DeonticASTRewritingTransformer(DeonticASTTransformer):
             return atom
         if atom.term.name == "show":
             self._map_show_atom(atom)
+
+        def has_valid_condition(lit):
+            return 'condition' in lit and lit['condition'] is not None and \
+                lit['condition'] != []
         if self._in_head:
             iterable, literals, deontic_conditional = self._map_deontic_atom_with_sequence(atom)
             if deontic_conditional is not None:
                 self._deontic_conditional = deontic_conditional
             if not iterable:
                 return atom
-            conditional_literals = [ast.ConditionalLiteral(atom.term.location, lit['term'], lit['condition'])
-                                    if lit['condition'] is not None and lit['condition'] != [] else lit['term']
+            conditional_literals = [ast.ConditionalLiteral(atom.term.location, lit['term'], lit['condition'] or [])
                                     for lit in literals]
             self._head_theory_atoms_sequence.extend(conditional_literals)
         elif self._in_body:
@@ -42,7 +54,7 @@ class DeonticASTRewritingTransformer(DeonticASTTransformer):
                 return atom
             rewritten_literals = self._rewrite_literals(literals)
             conditional_literals = [ast.ConditionalLiteral(atom.term.location, lit['term'], lit['condition'])
-                                    if lit['condition'] is not None and lit['condition'] != [] else lit['term']
+                                    if has_valid_condition(lit) else lit['term']
                                     for lit in rewritten_literals]
             self._body_theory_atoms_sequence.extend(conditional_literals)
         return atom
@@ -55,11 +67,16 @@ class DeonticASTRewritingTransformer(DeonticASTTransformer):
         new_literals = []
         for lit in literals:
             new_term = lit['term']
+            new_condition = lit['condition'] if 'condition' in lit else None
             if new_term.atom.symbol.name in [DeonticAtoms.VIOLATED_OBLIGATION.value.prefixed(),
                                              DeonticAtoms.FULFILLED_OBLIGATION.value.prefixed(),
                                              DeonticAtoms.NON_VIOLATED_OBLIGATION.value.prefixed(),
                                              DeonticAtoms.NON_FULFILLED_OBLIGATION.value.prefixed(),
                                              DeonticAtoms.UNDETERMINED_OBLIGATION.value.prefixed()]:
+                if new_term.sign == ast.Sign.Negation:
+                    new_literals.append(lit)
+                    self._derivation_rules_to_be_added.add(new_term.atom.symbol.name)
+                    continue
                 is_fulfillment = new_term.atom.symbol.name in [DeonticAtoms.FULFILLED_OBLIGATION.value.prefixed(),
                                                                DeonticAtoms.NON_FULFILLED_OBLIGATION.value.prefixed()]
                 is_negated = new_term.atom.symbol.name in [DeonticAtoms.NON_VIOLATED_OBLIGATION.value.prefixed(),
@@ -70,21 +87,25 @@ class DeonticASTRewritingTransformer(DeonticASTTransformer):
                 new_term.atom.symbol.name = DeonticAtoms.OBLIGATORY.value.prefixed()
                 new_term_2.atom.symbol.name = DeonticAtoms.HOLDS.value.prefixed()
                 new_term_3.atom.symbol.name = DeonticAtoms.HOLDS.value.prefixed()
-                new_literals.append({'term': new_term, 'condition': lit['condition']})
+                new_literals.append({'term': new_term, 'condition': new_condition})
                 if is_negated or is_undetermined:
                     new_term_2.sign = ast.Sign.Negation
                     new_term_3.sign = ast.Sign.Negation
                 if not is_fulfillment and not is_undetermined:
                     new_term_2.atom.symbol.name = "-" + new_term_2.atom.symbol.name
-                new_literals.append({'term': new_term_2, 'condition': lit['condition']})
+                new_literals.append({'term': new_term_2, 'condition': new_condition})
                 if is_undetermined:
                     new_term_3.atom.symbol.name = "-" + new_term_3.atom.symbol.name
-                    new_literals.append({'term': new_term_3, 'condition': lit['condition']})
+                    new_literals.append({'term': new_term_3, 'condition': new_condition})
             elif new_term.atom.symbol.name in [DeonticAtoms.VIOLATED_PROHIBITION.value.prefixed(),
                                                DeonticAtoms.FULFILLED_PROHIBITION.value.prefixed(),
                                                DeonticAtoms.NON_VIOLATED_PROHIBITION.value.prefixed(),
                                                DeonticAtoms.NON_FULFILLED_PROHIBITION.value.prefixed(),
                                                DeonticAtoms.UNDETERMINED_PROHIBITION.value.prefixed()]:
+                if new_term.sign == ast.Sign.Negation:
+                    new_literals.append(lit)
+                    self._derivation_rules_to_be_added.add(new_term.atom.symbol.name)
+                    continue
                 is_fulfillment = new_term.atom.symbol.name in [DeonticAtoms.FULFILLED_PROHIBITION.value.prefixed(),
                                                                DeonticAtoms.NON_FULFILLED_PROHIBITION.value.prefixed()]
                 is_negated = new_term.atom.symbol.name in [DeonticAtoms.NON_VIOLATED_PROHIBITION.value.prefixed(),
@@ -92,20 +113,20 @@ class DeonticASTRewritingTransformer(DeonticASTTransformer):
                 new_term_2 = copy.deepcopy(new_term)
                 new_term.atom.symbol.name = DeonticAtoms.FORBIDDEN.value.prefixed()
                 new_term_2.atom.symbol.name = DeonticAtoms.HOLDS.value.prefixed()
-                new_literals.append({'term': new_term, 'condition': lit['condition']})
+                new_literals.append({'term': new_term, 'condition': new_condition})
                 if is_negated:
                     new_term_2.sign = ast.Sign.Negation
                 if is_fulfillment:
                     new_term_2.atom.symbol.name = "-" + new_term_2.atom.symbol.name
-                new_literals.append({'term': new_term_2, 'condition': lit['condition']})
+                new_literals.append({'term': new_term_2, 'condition': new_condition})
             elif new_term.atom.symbol.name in [DeonticAtoms.PERMITTED_IMPLICITLY.value.prefixed()]:
                 new_term.atom.symbol.name = DeonticAtoms.FORBIDDEN.value.prefixed()
                 new_term.sign = ast.Sign.Negation if new_term.sign == ast.Sign.NoSign else ast.Sign.DoubleNegation
-                new_literals.append({'term': new_term, 'condition': lit['condition']})
+                new_literals.append({'term': new_term, 'condition': new_condition})
             elif new_term.atom.symbol.name in [DeonticAtoms.OMISSIBLE_IMPLICITLY.value.prefixed()]:
                 new_term.atom.symbol.name = DeonticAtoms.OBLIGATORY.value.prefixed()
                 new_term.sign = ast.Sign.Negation if new_term.sign == ast.Sign.NoSign else ast.Sign.DoubleNegation
-                new_literals.append({'term': new_term, 'condition': lit['condition']})
+                new_literals.append({'term': new_term, 'condition': new_condition})
             else:
                 new_literals.append(lit)
         return new_literals

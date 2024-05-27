@@ -2,6 +2,8 @@
 from deolingo._ast_rewriting_transformer import DeonticASTRewritingTransformer
 
 from deolingo._deolingo_theory import _DEOLINGO_RESTRICTED_THEORY
+from deolingo._deontic_atom import DeonticAtoms
+from deolingo._deontic_rules import DeonticRules
 from deolingo._translator import DeolingoTranslator
 
 
@@ -24,9 +26,31 @@ class DeolingoRewritingTranslator(DeolingoTranslator):
             self._deolingo_theory_added = True
 
     def _add_rules_for_each_deontic_atom(self):
-        pass
+        super()._add_rules_for_each_deontic_atom()
 
     def _add_common_deontic_rules(self):
-        pass
+        if self._deontic_rules_added:
+            return
+        self._deontic_rules_added = True
+        necessary_rules = self.deontic_transformer.derivation_rules_to_be_added
+        super()._add_string_to_program("\n".join(DeonticRules.deontic_weak_axiom()) + '\n')
+        super()._add_string_to_program("\n".join(DeonticRules.obligation_prohibition_equivalence()) + '\n')
+        if len(necessary_rules) == 0:
+            return
+        super()._add_string_to_program("\n% Deontic rules\n")
+        rules = {
+            DeonticAtoms.VIOLATED_OBLIGATION.value.prefixed(): DeonticRules.derive_violated_obligation(),
+            DeonticAtoms.FULFILLED_OBLIGATION.value.prefixed(): DeonticRules.derive_fulfilled_obligation(),
+            DeonticAtoms.VIOLATED_PROHIBITION.value.prefixed(): DeonticRules.derive_violated_prohibition(),
+            DeonticAtoms.FULFILLED_PROHIBITION.value.prefixed(): DeonticRules.derive_fulfilled_prohibition(),
+            DeonticAtoms.NON_VIOLATED_OBLIGATION.value.prefixed(): DeonticRules.derive_non_violated_obligation(),
+            DeonticAtoms.NON_FULFILLED_OBLIGATION.value.prefixed(): DeonticRules.derive_non_fulfilled_obligation(),
+            DeonticAtoms.NON_VIOLATED_PROHIBITION.value.prefixed(): DeonticRules.derive_non_violated_prohibition(),
+            DeonticAtoms.NON_FULFILLED_PROHIBITION.value.prefixed(): DeonticRules.derive_non_fulfilled_prohibition(),
+            DeonticAtoms.UNDETERMINED_OBLIGATION.value.prefixed(): DeonticRules.derive_undetermined_obligation(),
+            DeonticAtoms.UNDETERMINED_PROHIBITION.value.prefixed(): DeonticRules.derive_undetermined_prohibition(),
+        }
+        for deontic_atom_name in necessary_rules:
+            super()._add_string_to_program(rules[deontic_atom_name] + "\n")
 
     # </editor-fold>
