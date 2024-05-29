@@ -63,7 +63,7 @@ document(Document) :- document_type(Document, _).
 
 % 4.1. The loan will be formalized by presenting the identification card university or an official document that identifies the user.
 id_document(university_id_card; official_id_card).
-&obligatory{borrower_identification(User, ID)} :- library_user(User), id_document(ID).
+&obligatory{borrower_identification(User, ID)} :- library_user(User), id_document(ID), borrow(Document), borrowed(Document, User).
 
 % 4.2. The conditions of the loan service depend on the group to which the person belongs that requests the loan and the type of document (see below Annex I. Conditions of loan).
 
@@ -78,13 +78,14 @@ id_document(university_id_card; official_id_card).
 % 5. Non-compliance with loan rules
 
 % 5.1. Users have the obligation to return the loaned documents within the deadline. Similarly, if a document is borrowed by academic year, there is an obligation to return it when requested by another user.
-&obligatory{return(Document, User, Deadline)} :- borrowed(Document, User, Deadline).
+overdue(Document, User) :- borrowed(Document, User, DaysBorrowed), DaysBorrowed > Max, max_loan_days_user(User, Max).
+&obligatory{return(Document, User)} :- overdue(Document, User).
 &obligatory{return(Document, User)} :- borrowed_for_year(Document, User, _), reservation(Document, AnotherUser), User!=AnotherUser.
 borrowed(Document, User) :- borrowed_for_year(Document, User, _).
+borrowed(Document, User) :- borrowed(Document, User, _).
 
 % 5.2. In the event of non-compliance with point 5.1, the library will demand the return of documents. Under no circumstances will documents be given to users who have overdue or claimed loans.
 demand_return(User) :- &violated_obligation{return(Document, User)}, library_user(User).
-overdue(Document, User) :- return(Document, User, Deadline), today(Date), Deadline > Date.
 &forbidden{overdue(Document, User)} :- borrowed(Document, User).
 
 % 5.3. The delay in the return of the documents on loan will be a reason for the penalty that will be incurred the temporary exclusion of the user of the loan service.
@@ -125,8 +126,10 @@ exceed_max_docs_loan(User) :- library_user(User), member(user_group(Group), User
 
 % The maximum number of days that a document can be borrowed depends on the group to which the user belongs.
 max_loan_days(1, 10). max_loan_days(2, 21). max_loan_days(3, 30). 
-max_loan_days(4, 365). max_loan_days(5, 365). max_loan_days(6, 10). 
-exceed_max_loan_days(User) :- library_user(User), member(user_group(Group), User), max_loan_days(Group, Max), #sum{Days,Document,User: borrowed(Document, User, Days)} > Max.
+max_loan_days(4, 365). max_loan_days(5, 365). max_loan_days(6, 10).
+max_loan_days_user(User, Max) :- library_user(User), member(user_group(Group), User), max_loan_days(Group, Max).
+exceed_max_loan_days(User) :- max_loan_days_user(User, Max),
+                              #max{DaysBorrowed,Document,User: borrowed(Document, User, DaysBorrowed)} > Max.
 &forbidden{exceed_max_loan_days(User)} :- library_user(User).
 
 % The maximum number of renewals that can be made depends on the group to which the user belongs.
