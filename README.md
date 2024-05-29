@@ -22,6 +22,10 @@ You can install Deolingo using pip:
 pip install git+https://github.com/ovidiomanteiga/deolingo.git@main
 ```
 
+ℹ️ You might as well give Deolingo a try in the [Deolingo web page](https://deolingo.azurewebsites.net/),
+which features a fancy web editor using the [Monaco editor](https://github.com/microsoft/monaco-editor).
+
+
 ## Usage
 
 You can use Deolingo as a library in your Python code or as a command line tool.
@@ -43,15 +47,27 @@ The following options are available:
 - `--translate`: Prints the translated deontic logic program to the standard output.
 - `--ungrouped`: Prints the answer sets ungrouped
   (by default they are grouped by world: facts, obligations, prohibitions).
-- `--outf=3`: Remove all Clingo output. Use in conjunction with `--translate` to output the translated program only.
+- `--explain`: Explain the resulting answer sets using [Xclingo](https://github.com/bramucas/xclingo2).
+- `--benchmark`: Run multiple configured solver instances against all the examples and prints the stats.
+- `--generate`: Generates a deontic logic program from the given input text in natural language using an LLM.
+  - `--generator=gemini|gpt4all|openai|huggingfacehub`: In conjunction with the `--generate` option, 
+    indicates the LLM provider.
+- `--optimize`: Runs the solver with the optimization mode, which reduces grounding (CPU and memory footprint). 
+  See details below.
+- `--temporal`: Runs the deontic logic program with temporal reasoning using [Telingo](https://github.com/potassco/telingo).
 
-The `deolingo` command supports most of the options of the Clingo command. 
-You can use the `--help` option to see the available options.
+The `deolingo` command supports most of the options of the Clingo command-line app. 
+You can use the `--help` option to see the available options. See also Clingo documentation for more information on:
+- https://github.com/potassco/clingo
+- https://potassco.org/clingo/
 
 
 ### Library
 
-To use Deolingo as a library, you can import the `deolingo` module and use the `deolingo.solve` function.
+To use Deolingo as a library, you can import the `deolingo` module and use the `DeolingoSolver` class.
+A DeolingoControl class is also provided to control the solver and the grounding process, 
+which subclasses the [`clingo.Control` class](https://potassco.org/clingo/python-api/5.7/clingo/control.html),
+providing the same interface.
 
 ```python
 import deolingo
@@ -62,12 +78,12 @@ program = """
     &permitted{park} :- not &forbidden{park}.
 """
 
-solutions = deolingo.solve(program, all_models=True, grouped=True)
+solutions = DeolingoSolver().solve(program, all_models=True, grouped=True)
 
 print(solutions)
 ```
 
-The `deolingo.solve` function returns a string with the output of the ASP solver.
+The `DeolingoSolver.solve` method returns a list of all the deontic answer sets as the output of the deontic ASP solver.
 
 
 
@@ -97,10 +113,9 @@ Output from deolingo:
 
 ```
 Answer: 1
-Answer:
-FACTS: [-work, -weekend]
-OBLIGATIONS: [&obligatory{work}]
-PROHIBITIONS: []
+FACTS: -work, -weekend
+OBLIGATIONS: &obligatory{work}
+PROHIBITIONS:
 SATISFIABLE
 ```
 
@@ -119,13 +134,15 @@ The output shows that the program is satisfiable and there is an answer set whos
 ## Tests
 
 The examples are also used as tests for Deolingo.
-You can run all the tests using the following command in the root directory of the project
+You can run all the tests using the following command in the root directory of the project.
 
 ```bash
 $ python -m pytest
 // OR SIMPLY
 $ pytest
 ```
+
+That command also runs all the unit tests in the `tests` directory.
 
 
 ## Deontic theory atoms
@@ -177,7 +194,10 @@ It is represented by the _holds_ theory atom `&holds{p}`, which is true if, and 
 ```
 #theory _deolingo_ {
     deontic_term {
-        - : 1, unary
+        - : 4, unary;
+        && : 3, binary, left;
+        || : 2, binary, left;
+        | : 1, binary, left
     };
     show_term { / : 1, binary, left };
     &obligatory/0 : deontic_term, any;
@@ -209,18 +229,80 @@ It is represented by the _holds_ theory atom `&holds{p}`, which is true if, and 
 }.
 ```
 
+### Restricted Deolingo theory definition
+
+When running Deolingo in optimized mode, the following theory definition is used to restrict
+the usage of some deontic theory atoms to either heads or bodies:
+
+```
+#theory _deolingo_ {
+    deontic_term {
+        - : 4, unary;
+        && : 3, binary, left;
+        || : 2, binary, left;
+        | : 1, binary, left
+    };
+    show_term { / : 1, binary, left };
+    &obligatory/0 : deontic_term, any;
+    &forbidden/0 : deontic_term, any;
+    &omissible/0 : deontic_term, any;
+    &permitted/0 : deontic_term, any;
+    &optional/0 : deontic_term, any;
+    &permitted_by_default/0 : deontic_term, head;
+    &omissible_by_default/0 : deontic_term, head;
+    &holds/0 : deontic_term, any;
+    &deontic/0 : deontic_term, any;
+    &permitted_implicitly/0 : deontic_term, body;
+    &omissible_implicitly/0 : deontic_term, body;
+    &violated/0 : deontic_term, body;
+    &fulfilled/0 : deontic_term, body;
+    &violated_obligation/0 : deontic_term, body;
+    &fulfilled_obligation/0 : deontic_term, body;
+    &non_violated_obligation/0 : deontic_term, body;
+    &non_fulfilled_obligation/0 : deontic_term, body;
+    &undetermined_obligation/0 : deontic_term, body;
+    &default_obligation/0 : deontic_term, head;
+    &violated_prohibition/0 : deontic_term, body;
+    &fulfilled_prohibition/0 : deontic_term, body;
+    &non_violated_prohibition/0 : deontic_term, body;
+    &non_fulfilled_prohibition/0 : deontic_term, body;
+    &undetermined_prohibition/0 : deontic_term, body;
+    &default_prohibition/0 : deontic_term, head;
+    &show/0 : show_term, directive
+}.
+```
+
+### Deontic theory atoms syntax
+
+Currently, Deolingo supports the following constructs inside the deontic theory atoms:
+- Simple terms and their explicit negations. 
+  For example, `&obligatory{p}.` and `&obligatory{-p}.`.
+- Variables. For example, `&obligatory{X}.` and `&obligatory{-X}.`.
+- Conditional literals: `:- &obligatory{p: q}.` is equivalent to `:- &obligatory{p} : q.`.
+- Sequences of simple terms and variables with conditional literals.
+  For example, `&obligatory{p; X}.`, meaning `&obligatory{p}; &obligatory{X}.`.
+- Disjunctions in the **head** of rules: `&obligatory{p || q}.`, which is equivalent to `&obligatory{p; q}.`.
+- Conjunctions in the **body** of rules: `:- &obligatory{p && q}.`, which is equivalent to `:- &obligatory{p; q}.`.
+- Deontic conditional operator (in the **head** of rules): `&obligatory{p | q}.`, 
+  meaning `&obligatory{p} :- q. &obligatory{p} :- &non_violated_obligation{q}.`, as described in the DELX paper.
+
 
 ### Syntax limitations
 
 - `-&obligatory{p}` explicit negation of theory atoms is not allowed by Clingo.
   Use the corresponding negative deontic atom instead, in this case `&omissible{p}`.
+  And `&permitted{p}` is equivalent to `-&forbidden{p}`.
 - `not &obligatory{p} :- conditions...` default negation of theory atoms is not allowed in the head of a rule by Clingo.
-  If default negation of a theory atom is needed in the head, it can be obtained by the following constraint:
-  - `:- not &obligatory{p}, conditions...`
+  Instead, the same result can be obtained by the following constraint:
+  - `:- &obligatory{p}, conditions...`
+- `&obligatory{&obligatory{p}}` nested deontic atoms are not allowed in Deolingo.
+  The deontic atoms are restricted to simple terms, variables, conditionals or sequences.
+  If this expression is needed, it can be replaced by `obp :- &obligatory{p}. &obligatory{obp}`.
+- `&obligatory{p && q}.` conjunction operator is not allowed in the head of a rule.
+  Use the corresponding deontic atom instead in two rules, in this case `&obligatory{p}. &obligatory{q}.`.
+- `:- &obligatory{p || q}.` disjunction operator is not allowed in the body of a rule.
+  Use the corresponding deontic atoms instead in two rules, in this case `:- &obligatory{p}. :- &obligatory{q}.`.
 
-Deolingo version 1 only supports simple terms in the deontic theory atoms, like atoms, their explicit negations and variables.
-In future versions of Deolingo, the support for complex terms will be added as per the DELX paper;
-for example: `&obligatory{p & q}.` meaning that it is obligatory that `p` and `q`.
 
 
 ## License
