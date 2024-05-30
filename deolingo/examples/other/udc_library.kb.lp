@@ -37,7 +37,7 @@ library_user(User) :- member(udc_external, User), authorized(User).
 &forbidden{borrow(Document)} :- document_type(Document, unique).
 &forbidden{borrow(Document)} :- document_type(Document, unpublished).
 
-document(Document) :- document_type(Document, _).
+document(Document) :- document_type(Document, Type).
 
 &permitted{consult_in_room(Document)} :- &permitted{borrow(Document)}, document(Document).
 &permitted{consult_in_room(Document)} :- restricted_borrowing(Document).
@@ -80,17 +80,17 @@ id_document(university_id_card; official_id_card).
 % 5.1. Users have the obligation to return the loaned documents within the deadline. Similarly, if a document is borrowed by academic year, there is an obligation to return it when requested by another user.
 overdue(Document, User) :- borrowed(Document, User, DaysBorrowed), DaysBorrowed > Max, max_loan_days_user(User, Max).
 &obligatory{return(Document, User)} :- overdue(Document, User).
-&obligatory{return(Document, User)} :- borrowed_for_year(Document, User, _), reservation(Document, AnotherUser), User!=AnotherUser.
-borrowed(Document, User) :- borrowed_for_year(Document, User, _).
-borrowed(Document, User) :- borrowed(Document, User, _).
+&obligatory{return(Document, User)} :- borrowed_for_year(Document, User, Year), reservation(Document, AnotherUser), User!=AnotherUser.
+borrowed(Document, User) :- borrowed_for_year(Document, User, Year), year(Year).
+borrowed(Document, User) :- borrowed(Document, User, DaysBorrowed).
 
 % 5.2. In the event of non-compliance with point 5.1, the library will demand the return of documents. Under no circumstances will documents be given to users who have overdue or claimed loans.
 demand_return(User) :- &violated_obligation{return(Document, User)}, library_user(User).
 &forbidden{overdue(Document, User)} :- borrowed(Document, User).
 
 % 5.3. The delay in the return of the documents on loan will be a reason for the penalty that will be incurred the temporary exclusion of the user of the loan service.
-&forbidden{borrow(User)} :- overdue(_, User).
-borrow(User) :- borrowed(_, User).
+&forbidden{borrow(User)} :- overdue(Document, User), document(Document).
+borrow(User) :- borrowed(Document, User), document(User).
 
 % 5.4. In case of loss or deterioration, the user must return the work provided by another copy of the same edition. If the work is sold out you will have to purchase and deliver another with similar characteristics proposed by the library. As long as it is not restored to work, the user will be excluded from the loan service.
 &obligatory{restitution(Document, User)} :- missed(Document, User), not sold_out(Document).
@@ -98,7 +98,7 @@ borrow(User) :- borrowed(_, User).
 &forbidden{borrow(User)} :- missed(Document, User), not restitution(Document, User).
 
 % 5.5. In order to ensure the return or replacement of the bibliographic funds belonging to the patrimony of the UDC, the secretariat of each center will be able to ask the Library for a report about the situation of the loan when the students request the issuance of the official title. If you have loans pending repayment, the Administration of the center may require its regularization.
-&forbidden{get_degree(User)} :- overdue(_, User).
+&forbidden{get_degree(User)} :- overdue(Document, User).
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
