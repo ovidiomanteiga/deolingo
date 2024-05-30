@@ -33,6 +33,13 @@ class DeonticRules:
         ]
 
     @staticmethod
+    def deontic_weak_axiom_weak_constraint():
+        return [
+            f"\n% Deontic axiom D for DELX (weak constraint)",
+            f":~ {obligatory('X')}, {forbidden('X')}, not {holds('X')}, not {holds('-X')}. [1@1, X]",
+        ]
+
+    @staticmethod
     def violation_fullfillment():
         return [
             f"\n% Violation",
@@ -48,13 +55,9 @@ class DeonticRules:
         return [
             f"\n% Obligation/prohibition equivalence",
             f"{obligatory('X')} :- {forbidden('-X')}.",
-            f"{forbidden('-X')} :- {obligatory('X')}.",
             f"{forbidden('X')}  :- {obligatory('-X')}.",
-            f"{obligatory('-X')} :- {forbidden('X')}.",
             f"-{obligatory('X')} :- -{forbidden('-X')}.",
-            f"-{forbidden('-X')} :- -{obligatory('X')}.",
             f"-{forbidden('X')}  :- -{obligatory('-X')}.",
-            f"-{obligatory('-X')} :- -{forbidden('X')}.",
         ]
 
     @staticmethod
@@ -221,7 +224,5 @@ class DeonticRules:
         return [
             f"\n% Deontic",
             f"{deontic('X')} :- {obligatory('X')}.",
-            f"{deontic('X')} :- {obligatory('-X')}.",
             f"{deontic('X')} :- {forbidden('X')}.",
-            f"{deontic('X')} :- {forbidden('-X')}.",
         ]
