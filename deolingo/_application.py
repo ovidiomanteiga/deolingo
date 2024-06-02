@@ -8,6 +8,7 @@ import clingo.ast as ast
 import deolingo._version as deolingo_version
 from deolingo._answer_set_rewriter import DeonticAnswerSetRewriter
 from deolingo._rewriting_translator import DeolingoRewritingTranslator
+from deolingo._telingo_app import DeolingoTelingoApp
 from deolingo._translator import DeolingoTranslator
 from deolingo.xcontrol import XDeolingoControl
 
@@ -187,20 +188,7 @@ class DeolingoApplication(clingo.Application):
                 print(expl.ascii_tree())
 
     def _run_with_telingo(self, program, files):
-        with ast.ProgramBuilder(program) as builder:
-            transformer = DeolingoTranslator(builder.add, translate=True)
-            transformer.transform_sources(None, files)
-        tprogram = transformer.translated_program
-        import telingo
-        tapp = telingo.TelApp()
-        import tempfile
-        # Create a named temporary file (automatically deleted on close)
-        with tempfile.NamedTemporaryFile(mode="w+t", delete=False) as temp_file:
-            temp_file.write(tprogram)
-            temp_file.seek(0)  # Rewind to the beginning of the file
-            clingo.clingo_main(tapp, [temp_file.name])
-            temp_file.close()  # Important: close the file first to release the handle
-            import os
-            os.remove(temp_file.name)
+        app = DeolingoTelingoApp()
+        app.run(program, files)
 
     # </editor-fold>

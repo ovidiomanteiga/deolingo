@@ -37,7 +37,8 @@ class DeolingoTranslator:
         self._translated_part = ""
         self._add_deolingo_theory()
         self._transform_and_add_source_inputs(inputs, files)
-        self._transform_and_add_source_inputs(["#program deolingo."])
+        if self._add_deontic_rules and self.translate:
+            self._transform_and_add_source_inputs(["#program base."])
         self._add_common_deontic_rules()
         self._add_rules_for_each_deontic_atom()
         part = self._translated_part
