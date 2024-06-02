@@ -65,8 +65,7 @@ class DeolingoTranslator:
     def _add_deolingo_theory(self):
         """Add the Deolingo theory to the program if it has not been added yet."""
         if self._add_theory and not self._deolingo_theory_added:
-            self._add_string_to_program(_DEOLINGO_THEORY, add_to_translation=not self.translate)
-            #self._add_string_to_program(telingo_theory, add_to_translation=True)
+            self._add_string_to_program(_DEOLINGO_THEORY, add_to_translation=self.translate)
             self._deolingo_theory_added = True
 
     def _transform_and_add_to_program(self, statement):
@@ -125,64 +124,3 @@ class DeolingoTranslator:
         self._deontic_rules_added = True
 
     # </editor-fold>
-
-telingo_theory = """
-        #theory tel {
-            formula_body  {
-                &   : 7, unary;         % prefix for keywords
-                -   : 7, unary;         % classical negation
-                +   : 6, binary, left;  % arithmetic +
-                -   : 6, binary, left;  % arithmetic -
-                ~   : 5, unary;         % negation
-                <   : 5, unary;         % previous
-                <   : 5, binary, right; % n x previous
-                <:  : 5, unary;         % weak previous
-                <:  : 5, binary, right; % n x weak previous
-                <?  : 5, unary;         % eventually-
-                <*  : 5, unary;         % always-
-                <<  : 5, unary;         % initially
-                >   : 5, unary;         % next
-                >   : 5, binary, right; % n x next
-                >:  : 5, unary;         % weak next
-                >:  : 5, binary, right; % n x weak next
-                >?  : 5, unary;         % eventually+
-                >*  : 5, unary;         % always+
-                >>  : 5, unary;         % finally
-                >*  : 4, binary, left;  % release
-                >?  : 4, binary, left;  % until
-                <*  : 4, binary, left;  % trigger
-                <?  : 4, binary, left;  % since
-                &   : 3, binary, left;  % and
-                |   : 2, binary, left;  % or
-                <-  : 1, binary, left;  % left implication
-                ->  : 1, binary, left;  % right implication
-                <>  : 1, binary, left;  % equivalence
-                ;>  : 0, binary, right; % sequence next
-                ;>: : 0, binary, right; % sequence weak next
-                <;  : 0, binary, left;  % sequence previous
-                <:; : 0, binary, left   % sequence weak previous
-            };
-            formula_head  {
-                &   : 7, unary;         % prefix for keywords
-                -   : 7, unary;         % classical negation
-                +   : 6, binary, left;  % arithmetic +
-                -   : 6, binary, left;  % arithmetic -
-                ~   : 5, unary;         % negation
-                >   : 5, unary;         % next
-                >   : 5, binary, right; % n x next
-                >:  : 5, unary;         % weak next
-                >:  : 5, binary, right; % n x weak next
-                >?  : 5, unary;         % eventually+
-                >*  : 5, unary;         % always+
-                >>  : 5, unary;         % finally
-                >*  : 4, binary, left;  % release
-                >?  : 4, binary, left;  % until
-                &   : 3, binary, left;  % and
-                |   : 2, binary, left;  % or
-                ;>  : 0, binary, right; % sequence next
-                ;>: : 0, binary, right  % sequence weak next
-            };
-            &tel/1 : formula_body, body;
-            &__tel_head/1 : formula_body, head
-        }.
-"""

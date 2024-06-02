@@ -1,5 +1,5 @@
 
-#theory _deolingo_ {
+#theory deolingo {
     deontic_term {
         - : 4, unary;
         && : 3, binary, left;

@@ -2,7 +2,7 @@
 # Deolingo: Deontic logic in ASP with Clingo
 
 Deolingo is a tool for reasoning about Deontic Logic based in Answer Set Programming.
-The tool is implemented in Python and uses Clingo as the ASP solver.
+The tool is implemented in Python and uses [Clingo](https://potassco.org/clingo) as the ASP solver.
 
 Deolingo implements the theoretical foundation described in the paper 
 [_"Deontic Equilibrium Logic with eXplicit negation"_](https://www.dc.fi.udc.es/~cabalar/DELX.pdf) 
@@ -22,7 +22,7 @@ You can install Deolingo using pip:
 pip install git+https://github.com/ovidiomanteiga/deolingo.git@main
 ```
 
-ℹ️ You might as well give Deolingo a try in the [Deolingo web page](https://deolingo.azurewebsites.net/),
+You might as well give Deolingo a try in the [Deolingo web page](https://deolingo.azurewebsites.net/),
 which features a fancy web editor using the [Monaco editor](https://github.com/microsoft/monaco-editor).
 
 
@@ -59,7 +59,7 @@ The following options are available:
 The `deolingo` command supports most of the options of the Clingo command-line app. 
 You can use the `--help` option to see the available options. See also Clingo documentation for more information on:
 - https://github.com/potassco/clingo
-- https://potassco.org/clingo/
+- https://potassco.org/clingo
 
 
 ### Library
@@ -192,7 +192,7 @@ It is represented by the _holds_ theory atom `&holds{p}`, which is true if, and 
 
 ### Clingo theory definition for Deolingo
 ```
-#theory _deolingo_ {
+#theory deolingo {
     deontic_term {
         - : 4, unary;
         && : 3, binary, left;
@@ -235,7 +235,7 @@ When running Deolingo in optimized mode, the following theory definition is used
 the usage of some deontic theory atoms to either heads or bodies:
 
 ```
-#theory _deolingo_ {
+#theory deolingo_restricted {
     deontic_term {
         - : 4, unary;
         && : 3, binary, left;
@@ -289,19 +289,27 @@ Currently, Deolingo supports the following constructs inside the deontic theory 
 
 ### Syntax limitations
 
-- `-&obligatory{p}` explicit negation of theory atoms is not allowed by Clingo.
+- `-&obligatory{p}` explicit negation of theory atoms is not allowed by Clingo syntax.
   Use the corresponding negative deontic atom instead, in this case `&omissible{p}`.
   And `&permitted{p}` is equivalent to `-&forbidden{p}`.
 - `not &obligatory{p} :- conditions...` default negation of theory atoms is not allowed in the head of a rule by Clingo.
   Instead, the same result can be obtained by the following constraint:
   - `:- &obligatory{p}, conditions...`
-- `&obligatory{&obligatory{p}}` nested deontic atoms are not allowed in Deolingo.
-  The deontic atoms are restricted to simple terms, variables, conditionals or sequences.
-  If this expression is needed, it can be replaced by `obp :- &obligatory{p}. &obligatory{obp}`.
 - `&obligatory{p && q}.` conjunction operator is not allowed in the head of a rule.
   Use the corresponding deontic atom instead in two rules, in this case `&obligatory{p}. &obligatory{q}.`.
 - `:- &obligatory{p || q}.` disjunction operator is not allowed in the body of a rule.
   Use the corresponding deontic atoms instead in two rules, in this case `:- &obligatory{p}. :- &obligatory{q}.`.
+- `&obligatory{not p}.` default negation of theory atoms is not allowed.
+  If this expression is needed, use the equivalences described in the DELX paper:
+  - `&obligatory{not p}` is equivalent to `not &obligatory{p}`.
+  - `&forbidden{not p}` is equivalent to `not not &permitted{p}`.
+- `&obligatory{&obligatory{p}}` nested deontic atoms are not allowed by Clingo syntax.
+  The deontic atoms are restricted to simple terms, variables, conditionals or sequences.
+  If this expression is needed, use the equivalences described in the DELX paper:
+  - `&obligatory{&obligatory{p}}` is equivalent to `&obligatory{p}`.
+  - `&obligatory{&forbidden{p}}` is equivalent to `&forbidden{p}`.
+  - `&forbidden{&obligatory{p}}` is equivalent to `&omissible{p}`.
+  - `&forbidden{&forbidden{p}}` is equivalent to `&permitted{p}`.
 
 
 
