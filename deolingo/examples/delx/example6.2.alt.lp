@@ -8,8 +8,8 @@
 % If it is obligatory a white fence, then it is obligatory a fence.
 &obligatory{f} :- &obligatory{w}.
 % (vii) If we put a fence, we must put a street mailbox (m).
-&obligatory{m: f}.
+&obligatory{m | f}.
 % (viii) If we do not put a fence, we must not put a street mailbox.
-&obligatory{-m: -f}.
+&obligatory{-m | -f}.
 % Fence or not fence.
 f;-f.

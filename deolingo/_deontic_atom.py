@@ -3,7 +3,7 @@ from enum import Enum
 from dataclasses import dataclass
 
 
-_DEOLINGO_ATOM_PREFIX = "_deolingo_"
+_DEOLINGO_ATOM_PREFIX = "deolingo_"
 
 
 @dataclass
@@ -23,9 +23,9 @@ class DeonticAtom:
         pre_name = self.prefix(self.name)
         if self.is_tel_prev:
             return "'" + pre_name
-        if self.is_tel_next:
+        elif self.is_tel_next:
             return pre_name + "'"
-        if self.is_tel_init:
+        elif self.is_tel_init:
             return "_" + pre_name
         return pre_name
 
@@ -45,7 +45,7 @@ class DeonticAtom:
 
     @staticmethod
     def unprefix(atom):
-        """Returns the atom without the prefix '_deolingo_'."""
+        """Returns the atom without the prefix 'deolingo_'."""
         return atom[len(_DEOLINGO_ATOM_PREFIX):]
 
 
@@ -95,7 +95,6 @@ class DeonticAtoms(Enum):
         is_tel_prev = name.startswith("'")
         is_tel_next = name.endswith("'")
         is_tel_init = name.startswith("_")
-        is_tel = is_tel_prev or is_tel_next
         if is_tel_prev or is_tel_next:
             name = name.replace("'", "")
         if is_tel_init:

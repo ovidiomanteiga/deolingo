@@ -28,14 +28,14 @@ class DeonticRules:
     @staticmethod
     def deontic_weak_axiom():
         return [
-            f"\n% Deontic axiom D for DELX",
+            f"\n% Deontic weak axiom D for DELX",
             f":- {obligatory('X')}, {forbidden('X')}, not {holds('X')}, not {holds('-X')}.",
         ]
 
     @staticmethod
     def deontic_weak_axiom_weak_constraint():
         return [
-            f"\n% Deontic axiom D for DELX (weak constraint)",
+            f"\n% Deontic weak axiom D for DELX (weak constraint)",
             f":~ {obligatory('X')}, {forbidden('X')}, not {holds('X')}, not {holds('-X')}. [1@1, X]",
         ]
 

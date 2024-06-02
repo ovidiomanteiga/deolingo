@@ -12,7 +12,8 @@ class DeolingoTranslator:
 
     # <editor-fold desc="Initialization">
 
-    def __init__(self, add_to_program_callback, transformer=None, translate=False, add_theory=True):
+    def __init__(self, add_to_program_callback, transformer=None, translate=False, add_theory=True,
+                 add_deontic_rules=True):
         self.deontic_transformer = transformer if transformer is not None else DeonticASTTransformer(translate)
         self._add_to_program_callback = add_to_program_callback
         self.translate = translate
@@ -21,6 +22,7 @@ class DeolingoTranslator:
         self._deolingo_theory_added = False
         self._deontic_rules_added = False
         self._add_theory = add_theory
+        self._add_deontic_rules = add_deontic_rules
 
     # </editor-fold>
 
@@ -35,6 +37,7 @@ class DeolingoTranslator:
         self._translated_part = ""
         self._add_deolingo_theory()
         self._transform_and_add_source_inputs(inputs, files)
+        self._transform_and_add_source_inputs(["#program deolingo."])
         self._add_common_deontic_rules()
         self._add_rules_for_each_deontic_atom()
         part = self._translated_part
@@ -70,6 +73,8 @@ class DeolingoTranslator:
         try:
             self.deontic_transformer.translated_program = ""
             transformed_statement = self.deontic_transformer(statement)
+            if str(transformed_statement) == "#program base.":
+                return
             if self.deontic_transformer.translated_program == "":
                 self._add_to_translation("\n" + str(transformed_statement))
             else:
@@ -95,6 +100,8 @@ class DeolingoTranslator:
 
     def _add_rules_for_each_deontic_atom(self):
         """Add the reified truth rules for each deontic atom."""
+        if not self._add_deontic_rules:
+            return
         for deontic_atom in self.deontic_transformer.deontic_atoms:
             holds_positive = holds(deontic_atom)
             holds_negative = holds(f"-{deontic_atom}")
@@ -110,7 +117,7 @@ class DeolingoTranslator:
 
     def _add_common_deontic_rules(self):
         """Add the common deontic rules to the program if not added already."""
-        if self._deontic_rules_added:
+        if not self._add_deontic_rules or self._deontic_rules_added:
             return
         deontic_rules_as_string = DeonticRules.all_rules_as_string()
         self._add_string_to_program(deontic_rules_as_string)

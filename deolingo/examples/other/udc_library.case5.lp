@@ -56,7 +56,7 @@ return("AIMA", "Irene").
 
 %!trace {"% must NOT return %",User,Document} &forbidden{return(Document, User)}.
 %!trace {"% must return %",User,Document} &obligatory{return(Document, User)}.
-%!trace {"% must NOT go out % ",User} &forbidden{go_out(User)}.
+%!trace {"% must NOT go out",User} &forbidden{go_out(User)}.
 
 %!show_trace return(Document, User).
 %!show_trace violated(Person, Rule).

@@ -234,9 +234,19 @@ class _DeonticConditional:
                              element.terms[0].elements[1].ast_type == ast.ASTType.TheoryUnparsedTermElement and \
                              element.terms[0].elements[1].operators[0] == "|"
             if is_conditional:
+                lhs_operators = element.terms[0].elements[0].operators
+                rhs_operators = element.terms[0].elements[1].operators
+                lhs_negative = lhs_operators[0] == "-" if len(lhs_operators) > 0 else False
+                rhs_negative = rhs_operators[1] == "-" if len(rhs_operators) > 1 else False
                 symbolic_term = theory_term_to_term(element.terms[0].elements[0].term)
+                if lhs_negative:
+                    symbolic_term = ast.UnaryOperation(atom.location, ast.UnaryOperator.Minus, symbolic_term)
                 term = _symbolic_literal(atom.location, ast.Sign.NoSign, deontic_atom_prefixed, [symbolic_term])
                 condition = theory_term_to_literal(element.terms[0].elements[1].term)
+                if rhs_negative:
+                    rhs_term = theory_term_to_term(element.terms[0].elements[1].term)
+                    rhs_atom = ast.SymbolicAtom(ast.UnaryOperation(atom.location, ast.UnaryOperator.Minus, rhs_term))
+                    condition = _positive_literal(atom.location, rhs_atom)
                 return _DeonticConditional(deontic_atom_prefixed, term, condition, symbolic_term, str(atom))
         return None
 

@@ -11,9 +11,10 @@ class DeolingoRewritingTranslator(DeolingoTranslator):
 
     # <editor-fold desc="Initialization">
 
-    def __init__(self, add_to_program_callback, transformer=None, translate=False, add_theory=True):
+    def __init__(self, add_to_program_callback, transformer=None, translate=False,
+                 add_theory=True, add_deontic_rules=True):
         transformer = transformer if transformer is not None else DeonticASTRewritingTransformer(translate)
-        super().__init__(add_to_program_callback, transformer, translate, add_theory)
+        super().__init__(add_to_program_callback, transformer, translate, add_theory, add_deontic_rules)
 
     # </editor-fold>
 

@@ -33,6 +33,7 @@ class DeolingoApplication(clingo.Application):
         self._generate_flag = clingo.Flag(False)
         self._optimize_flag = clingo.Flag(False)
         self._generator = None
+        self._n_explanations = 0
         self._temporal_flag = clingo.Flag(False)
         self._answer_set_rewriter = DeonticAnswerSetRewriter()
         self._xcontrol = None
@@ -53,7 +54,9 @@ class DeolingoApplication(clingo.Application):
             return self._generate_deontic_program(inputs)
         if self._explain_flag.flag:
             inputs = self._read_source_inputs_from_files(files)
-            return self._run_with_xcontrol(inputs)
+            n_solutions = int(program.configuration.solve.models)
+            n_solutions_str = '1' if n_solutions < 0 else str(n_solutions)
+            return self._run_with_xcontrol(inputs, n_solutions_str)
         self._run_with_clingo_control(program, files)
 
     def register_options(self, options: clingo.ApplicationOptions):
@@ -90,8 +93,14 @@ class DeolingoApplication(clingo.Application):
                 return True
             except ValueError:
                 return False
+
+        def xparser(value: str):
+            self._n_explanations = int(value)
+            return True
         options.add("deontic", "generator", "Generative AI API to user in --generate mode",
                     parser, False, "gemini|gpt4all|openai|huggingfacehub")
+        options.add("deontic", "explanations", "Number of explanations to generate",
+                    xparser, False, "0..N")
         options.add_flag("deontic",
                          "temporal",
                          "Runs a temporal deontic logic program in Telingo",
@@ -118,7 +127,7 @@ class DeolingoApplication(clingo.Application):
 
     @staticmethod
     def _set_output_format_if_translating():
-        if "--translate" not in sys.argv:
+        if "--translate" not in sys.argv and "--temporal" not in sys.argv:
             return
         for arg in sys.argv:
             if arg.startswith("--outf="):
@@ -160,8 +169,8 @@ class DeolingoApplication(clingo.Application):
         program.ground([("base", [])])
         program.solve(on_model=None, async_=False)
 
-    def _run_with_xcontrol(self, inputs):
-        self._xcontrol = XDeolingoControl(n_solutions='0', n_explanations='0', auto_trace='none')
+    def _run_with_xcontrol(self, inputs, n_solutions='1'):
+        self._xcontrol = XDeolingoControl(n_solutions=n_solutions, n_explanations=self._n_explanations)
         self._xcontrol.add_inputs(inputs)
         if self._translate_flag.flag:
             print(self._xcontrol.rewritten_program)
@@ -181,13 +190,10 @@ class DeolingoApplication(clingo.Application):
         with ast.ProgramBuilder(program) as builder:
             transformer = DeolingoTranslator(builder.add, translate=True)
             transformer.transform_sources(None, files)
-        tcontrol = clingo.Control()
         tprogram = transformer.translated_program
-        tprogram = tprogram.replace("_deolingo_", "deolingo_")
         import telingo
         tapp = telingo.TelApp()
         import tempfile
-        print(tprogram)
         # Create a named temporary file (automatically deleted on close)
         with tempfile.NamedTemporaryFile(mode="w+t", delete=False) as temp_file:
             temp_file.write(tprogram)

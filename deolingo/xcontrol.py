@@ -6,13 +6,15 @@ import re
 import clingo.ast as ast
 
 from deolingo._translator import DeolingoTranslator
+from deolingo._deontic_atom import _DEOLINGO_ATOM_PREFIX
 
 
 def rewrite_program(program):
     lines = program.splitlines()
     for i, line in enumerate(lines):
         if line.strip().startswith('%!'):
-            lines[i] = re.sub(r"&(\w+){(.+)}", r"_deolingo_\1(\2)", line)
+            repl = _DEOLINGO_ATOM_PREFIX + r"\1(\2)"
+            lines[i] = re.sub(r"&(\w+){(.+)}", repl, line)
     return '\n'.join(lines)
 
 

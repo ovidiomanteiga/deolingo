@@ -3,7 +3,7 @@ from deolingo._deontic_atom import DeonticAtoms as Deo
 
 
 _DEOLINGO_THEORY = f"""
-#theory _deolingo_ {{
+#theory deolingo {{
     deontic_term {{
         - : 4, unary;
         && : 3, binary, left;
@@ -42,7 +42,7 @@ _DEOLINGO_THEORY = f"""
 
 
 _DEOLINGO_RESTRICTED_THEORY = f"""
-#theory _deolingo_restricted_ {{
+#theory deolingo_restricted {{
     deontic_term {{
         - : 4, unary;
         && : 3, binary, left;
