@@ -53,15 +53,10 @@ class DeolingoRewritingTranslatorTestCase(unittest.TestCase):
         expected = "#false :- deolingo_obligatory(a); -deolingo_holds(a)."
         self.assertEqual(expected, actual)
 
-    # def test_violated_obligation_negated(self):
-    #     actual = parse(":- not &violated_obligation{a}.")
-    #     expected = "#false :- not deolingo_obligatory(a); not -deolingo_holds(a)."
-    #     #expected = """#false :- not deolingo_violated_obligation(a).
-    #     #deolingo_violated_obligation(X) :- deolingo_obligatory(X); -deolingo_holds(X)."""
-    #     # WARNING: This is not the right result, but it is the result of the current implementation.
-    #     # #false :- not deolingo_obligatory(a).
-    #     # #false :- not -deolingo_holds(a)."
-    #     self.assertEqual(expected, actual)
+    def test_violated_obligation_negated(self):
+        actual = parse(":- not &violated_obligation{a}.")
+        expected = "#false :- not deolingo_violated_obligation(a)."
+        self.assertEqual(expected, actual)
 
     def test_violated_obligation_strong_negated(self):
         actual = parse(":- &violated_obligation{-a}.")

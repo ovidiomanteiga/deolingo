@@ -144,9 +144,12 @@ class DeonticASTRewritingTransformer(DeonticASTTransformer):
                 nh_atom_name = DeonticAtoms.HOLDS.value.prefixed()
                 conditional_term = self._deontic_conditional.condition.atom.symbol
                 nh_conditional_term = copy.deepcopy(conditional_term)
-                nh_conditional_term.name = "-" + conditional_term.name
+                negative = "-"
+                if str(nh_conditional_term).startswith("-"):
+                    negative = ""
+                    nh_conditional_term = nh_conditional_term.argument
                 ob_atom = _symbolic_atom(rule.location, ob_atom_name, [conditional_term])
-                nh_atom = _symbolic_atom(rule.location, nh_atom_name, [nh_conditional_term])
+                nh_atom = _symbolic_atom(rule.location, negative + nh_atom_name, [nh_conditional_term])
                 new_rule_2.body = [_positive_literal(rule.location, ob_atom),
                                    _negative_literal(rule.location, nh_atom)]
                 multi_rule = [new_rule, new_rule_2]
