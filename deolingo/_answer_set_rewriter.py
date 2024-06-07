@@ -15,7 +15,7 @@ class DeonticAnswerSetRewriter:
     # <editor-fold desc="Public methods">
 
     def rewrite_atoms(self, atoms):
-        """Rewrites the atom by removing the prefix '_deolingo_' if present."""
+        """Rewrites the atom by removing the prefix 'deolingo_' if present."""
         rewritten_atoms = []
         for atom in atoms:
             str_atom = str(atom)

@@ -132,7 +132,8 @@ class DeonticASTRewritingTransformer(DeonticASTTransformer):
         return new_literals
 
     def _process_theory_atoms_in_head(self, multi_rule, new_head, rule):
-        if new_head.ast_type == ast.ASTType.Disjunction or new_head.ast_type == ast.ASTType.TheoryAtom:
+        if (new_head.ast_type == ast.ASTType.Disjunction or new_head.ast_type == ast.ASTType.TheoryAtom) and \
+               not self._is_telingo_atom(new_head):
             new_head_elements = self._filter_out_theory_atoms_and_literals_of_theory_atoms(
                 new_head.elements) if new_head.ast_type == ast.ASTType.Disjunction else []
             if self._deontic_conditional is not None:

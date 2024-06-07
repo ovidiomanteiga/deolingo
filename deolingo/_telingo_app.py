@@ -15,9 +15,12 @@ class DeolingoTelingoApp(telingo.TelApp):
 
     def run(self, program, files):
         with ast.ProgramBuilder(program) as builder:
-            transformer = DeolingoTranslator(builder.add, translate=True)
+            transformer = DeolingoTranslator(builder.add, translate=True, temporal=True)
             transformer.transform_sources(None, files)
         translated_program = transformer.translated_program
+        if "--translate" in sys.argv:
+            print(translated_program)
+            return
 
         # Create a named temporary file (automatically deleted on close)
         with tempfile.NamedTemporaryFile(mode="w+t", delete=False) as temp_file:
@@ -46,7 +49,7 @@ class DeolingoTelingoApp(telingo.TelApp):
                     m = re.match(pattern, str(sym))
                     if m is not None:
                         if m.group(2) in ["obligatory", "permitted", "forbidden", "omissible"]\
-                                and m.group(1) != "-":
+                                and m.group(1) != "-" and not m.group(3).startswith('-'):
                             sym = re.sub(pattern, r"\1&\2{\3}", str(sym))
                             sys.stdout.write("\n ")
                             sys.stdout.write(" {}".format(sym))

@@ -1,4 +1,4 @@
-
+from copy import deepcopy
 from enum import Enum
 from dataclasses import dataclass
 
@@ -98,13 +98,14 @@ class DeonticAtoms(Enum):
         if is_tel_prev or is_tel_next:
             name = name.replace("'", "")
         if is_tel_init:
-            name = name[1:]
+            name = name.lstrip("_")
         for atom in cls.get_all():
             if atom.value.name == name:
-                atom.value.is_tel_prev = is_tel_prev
-                atom.value.is_tel_next = is_tel_next
-                atom.value.is_tel_init = is_tel_init
-                return atom
+                new_atom = deepcopy(atom.value)
+                new_atom.is_tel_prev = is_tel_prev
+                new_atom.is_tel_next = is_tel_next
+                new_atom.is_tel_init = is_tel_init
+                return new_atom
         return None
 
     @classmethod

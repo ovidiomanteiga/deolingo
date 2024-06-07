@@ -13,7 +13,7 @@ class DeolingoTranslator:
     # <editor-fold desc="Initialization">
 
     def __init__(self, add_to_program_callback, transformer=None, translate=False, add_theory=True,
-                 add_deontic_rules=True):
+                 add_deontic_rules=True, temporal=False):
         self.deontic_transformer = transformer if transformer is not None else DeonticASTTransformer(translate)
         self._add_to_program_callback = add_to_program_callback
         self.translate = translate
@@ -23,6 +23,7 @@ class DeolingoTranslator:
         self._deontic_rules_added = False
         self._add_theory = add_theory
         self._add_deontic_rules = add_deontic_rules
+        self.temporal = temporal
 
     # </editor-fold>
 
@@ -37,8 +38,7 @@ class DeolingoTranslator:
         self._translated_part = ""
         self._add_deolingo_theory()
         self._transform_and_add_source_inputs(inputs, files)
-        if self._add_deontic_rules and self.translate:
-            self._transform_and_add_source_inputs(["#program base."])
+        self._add_program_statement()
         self._add_common_deontic_rules()
         self._add_rules_for_each_deontic_atom()
         part = self._translated_part
@@ -114,6 +114,12 @@ class DeolingoTranslator:
             ]
             rules_as_string = "\n".join(rules) + '\n'
             self._add_string_to_program(rules_as_string)
+
+    def _add_program_statement(self):
+        if self._add_deontic_rules and self.translate:
+            self._transform_and_add_source_inputs(["#program base."])
+        if self._add_deontic_rules and self.temporal:
+            self._transform_and_add_source_inputs(["#program always."])
 
     def _add_common_deontic_rules(self):
         """Add the common deontic rules to the program if not added already."""

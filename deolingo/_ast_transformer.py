@@ -102,8 +102,14 @@ class DeonticASTTransformer(Transformer):
 
     # <editor-fold desc="Private methods">
 
+    def _is_telingo_atom(self, atom):
+        return (atom.ast_type == ast.ASTType.TheoryAtom and \
+                hasattr(atom, "term") and atom.term.name == "tel")
+
+
     def _process_theory_atoms_in_head(self, multi_rule, new_head, rule):
-        if new_head.ast_type == ast.ASTType.Disjunction or new_head.ast_type == ast.ASTType.TheoryAtom:
+        if new_head.ast_type == ast.ASTType.Disjunction or new_head.ast_type == ast.ASTType.TheoryAtom and \
+               not self._is_telingo_atom(new_head):
             new_head_elements = self._filter_out_theory_atoms_and_literals_of_theory_atoms(
                 new_head.elements) if new_head.ast_type == ast.ASTType.Disjunction else []
             if self._deontic_conditional is not None:
@@ -146,7 +152,7 @@ class DeonticASTTransformer(Transformer):
                 dt_name = dt_name[1:] if dt_is_negated else dt_name
                 self.deontic_atoms.add(dt_name)
             return False, None, deontic_conditional
-        new_name = deontic_atom.value.prefixed()
+        new_name = deontic_atom.prefixed()
         sign = self._last_literal_sign if self._last_literal_sign is not None else ast.Sign.NoSign
         new_deontic_atoms = []
 
@@ -177,7 +183,7 @@ class DeonticASTTransformer(Transformer):
         for element in atom.elements:
             deontic_atom = DeonticAtoms.with_name(str(element.terms[0]))
             if deontic_atom is not None:
-                show_atoms.add(deontic_atom.value.prefixed())
+                show_atoms.add(deontic_atom.prefixed())
         show_rules = []
         for sa in show_atoms:
             show_rules.append(ast.ShowSignature(atom.location, sa, 1, 1))
@@ -225,7 +231,7 @@ class _DeonticConditional:
         deontic_atom = DeonticAtoms.with_name(atom.term.name)
         if deontic_atom is None:
             return None
-        deontic_atom_prefixed = deontic_atom.value.prefixed()
+        deontic_atom_prefixed = deontic_atom.prefixed()
         for element in atom.elements:
             is_conditional = len(element.terms) == 1 and \
                              element.terms[0].ast_type == ast.ASTType.TheoryUnparsedTerm and \
