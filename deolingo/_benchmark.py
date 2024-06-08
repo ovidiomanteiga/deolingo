@@ -33,6 +33,8 @@ class BenchmarkRunner:
         """Run the benchmark with all examples and print the results."""
         examples = self._example_reader.read_examples()
         for example in examples:
+            if example.name.startswith("telingo/"):
+                continue
             is_first_solver = True
             for solver in self.solvers:
                 print(f"Running benchmark for {example.name} with {solver.__name__}...")

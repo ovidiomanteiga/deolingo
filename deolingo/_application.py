@@ -47,7 +47,7 @@ class DeolingoApplication(clingo.Application):
     def main(self, program, files):
         """This function implements the Application.main() function as required by clingo.clingo_main()."""
         if self._temporal_flag.flag:
-            return self._run_with_telingo(program, files)
+            return self._solve_temporal_deontic_program(program, files)
         if self._benchmark_flag.flag:
             return self._run_benchmark()
         if self._generate_flag.flag:
@@ -55,10 +55,8 @@ class DeolingoApplication(clingo.Application):
             return self._generate_deontic_program(inputs)
         if self._explain_flag.flag:
             inputs = self._read_source_inputs_from_files(files)
-            n_solutions = int(program.configuration.solve.models)
-            n_solutions_str = '1' if n_solutions < 0 else str(n_solutions)
-            return self._run_with_xcontrol(inputs, n_solutions_str)
-        self._run_with_clingo_control(program, files)
+            return self._explain_deontic_program(program, inputs)
+        return self._solve_deontic_program(program, files)
 
     def register_options(self, options: clingo.ApplicationOptions):
         """Registers the options for the application."""
@@ -136,19 +134,6 @@ class DeolingoApplication(clingo.Application):
         sys.argv.append("--outf=3")
 
     @staticmethod
-    def _run_benchmark():
-        from deolingo._benchmark import BenchmarkRunner
-        runner = BenchmarkRunner()
-        runner.run_benchmark()
-        runner.print_results()
-
-    def _generate_deontic_program(self, inputs):
-        from deolingo._generator import DeonticProgramGenerator, Generator
-        generator = DeonticProgramGenerator(generator=self._generator)
-        program = generator.generate_program(inputs[0])
-        print(program)
-
-    @staticmethod
     def _read_source_inputs_from_files(files):
         files = [open(file) for file in files]
         if len(files) == 0:
@@ -156,39 +141,33 @@ class DeolingoApplication(clingo.Application):
         inputs = [file.read() for file in files]
         return inputs
 
-    def _run_with_clingo_control(self, program, files):
-        with ast.ProgramBuilder(program) as builder:
-            if self._optimize_flag.flag:
-                transformer = DeolingoRewritingTranslator(builder.add, translate=self._translate_flag.flag)
-            else:
-                transformer = DeolingoTranslator(builder.add, translate=self._translate_flag.flag)
-            transformer.transform_sources(None, files)
-        if self._translate_flag.flag:
-            print(transformer.translated_program)
-            return
-        program.configuration.solve.quiet = True
-        program.ground([("base", [])])
-        program.solve(on_model=None, async_=False)
+    @staticmethod
+    def _run_benchmark():
+        from deolingo.domain.run_benchmark_command import RunBenchmarkCommand
+        command = RunBenchmarkCommand()
+        command.execute()
 
-    def _run_with_xcontrol(self, inputs, n_solutions='1'):
-        self._xcontrol = XDeolingoControl(n_solutions=n_solutions, n_explanations=self._n_explanations)
-        self._xcontrol.add_inputs(inputs)
-        if self._translate_flag.flag:
-            print(self._xcontrol.rewritten_program)
-            return
-        self._xcontrol.ground([("base", [])])
-        self._print_text_explanations()
+    def _generate_deontic_program(self, inputs):
+        from deolingo.domain.generate_deontic_program_command import GenerateDeonticProgramCommand
+        command = GenerateDeonticProgramCommand(inputs[0], generator_type=self._generator)
+        command.execute()
 
-    def _print_text_explanations(self):
-        n = 0
-        for answer in self._xcontrol.explain():
-            n += 1
-            print(f'Answer {n}')
-            for expl in answer:
-                print(expl.ascii_tree())
+    def _solve_deontic_program(self, program, files):
+        from deolingo.domain.solve_deontic_program_command import SolveDeonticProgramCommand
+        command = SolveDeonticProgramCommand(program, files, self._translate_flag.flag, self._optimize_flag.flag)
+        command.execute()
 
-    def _run_with_telingo(self, program, files):
-        app = DeolingoTelingoApp()
-        app.run(program, files)
+    def _explain_deontic_program(self, program, inputs, n_solutions='1'):
+        from deolingo.domain.explain_deontic_program_command import ExplainDeonticProgramCommand
+        n_solutions = int(program.configuration.solve.models)
+        n_solutions_str = '1' if n_solutions < 0 else str(n_solutions)
+        command = ExplainDeonticProgramCommand(inputs, n_solutions_str, self._n_explanations, self._translate_flag.flag)
+        command.execute()
+
+    @staticmethod
+    def _solve_temporal_deontic_program(program, files):
+        from deolingo.domain.solve_temporal_deontic_program_command import SolveTemporalDeonticProgramCommand
+        command = SolveTemporalDeonticProgramCommand(program, files)
+        command.execute()
 
     # </editor-fold>
