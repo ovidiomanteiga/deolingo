@@ -20,9 +20,9 @@ setup(
     },
     author='Ovidio M. Moar',
     author_email='ovidio.manteiga@udc.es',
-    description='A Python package for deontic reasoning with Clingo and Xclingo',
+    description='A deontic logic solver for explainable deontic reasoning with Answer Set Programming (ASP).',
     license='MIT',
-    keywords='ASP, NMR, Deontic Logic, Deontic Reasoning, Clingo',
+    keywords='ASP, NMR, Deontic Logic, SDL, Deontic Reasoning, Clingo, Xclingo, Telingo',
     url='https://github.com/ovidiomanteiga/deolingo',
     classifiers=[
         'Development Status :: 3 - Alpha',

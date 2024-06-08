@@ -294,7 +294,7 @@ Currently, Deolingo supports the following constructs inside the deontic theory 
   And `&permitted{p}` is equivalent to `-&forbidden{p}`.
 - `not &obligatory{p} :- conditions...` default negation of theory atoms is not allowed in the head of a rule by Clingo.
   Instead, the same result can be obtained by the following constraint:
-  - `:- &obligatory{p}, conditions...`
+  - `:- not not &obligatory{p}, conditions...`
 - `&obligatory{p && q}.` conjunction operator is not allowed in the head of a rule.
   Use the corresponding deontic atom instead in two rules, in this case `&obligatory{p}. &obligatory{q}.`.
 - `:- &obligatory{p || q}.` disjunction operator is not allowed in the body of a rule.
