@@ -4,6 +4,11 @@ from setuptools import setup, find_packages
 version = {}
 exec(open('deolingo/_version.py').read(), version)
 
+# read the contents of your README file
+from pathlib import Path
+this_directory = Path(__file__).parent
+long_description = (this_directory / "README.md").read_text()
+
 setup(
     name='deolingo',
     version=version['__version__'],
@@ -24,6 +29,8 @@ setup(
     license='MIT',
     keywords='ASP, NMR, Deontic Logic, SDL, Deontic Reasoning, Clingo, Xclingo, Telingo',
     url='https://github.com/ovidiomanteiga/deolingo',
+    long_description=long_description,
+    long_description_content_type='text/markdown',
     classifiers=[
         'Development Status :: 3 - Alpha',
         'Intended Audience :: Education',
