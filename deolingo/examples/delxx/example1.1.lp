@@ -1,5 +1,5 @@
 
-% C6 (Defeasible Deontic Detachment) (2nd example: Π ∪ (22) ∪ {f ∨¬f})
+% C1 (Explicit versus Negative permission) (1st example: Π ∪ (15))
 
 %!trace_rule {"There must be no fence"}
 &forbidden{fence}.
@@ -16,17 +16,12 @@ fence :- white_fence.
 %!trace_rule {"It is obligatory a fence, if it is obligatory a white fence"}
 &obligatory{fence} :- &obligatory{white_fence}.
 
-%!trace_rule {"We must put a street mailbox if we put a fence"}
-&obligatory{mailbox | fence}.
-
-%!trace_rule {"We must not put a street mailbox if we do not put a fence"}
-&obligatory{-mailbox | -fence}.
-
-% Fence or not fence.
-1 {fence; -fence} 1.
-
-%!trace {"There is a fence"} fence.
-%!trace {"There is no fence"} -fence.
+%!trace_rule {"I build a fence around my cottage, if it is explicitly permitted"}
+fence :- &permitted{fence}.
 
 %!show_trace &obligatory{X}.
 %!show_trace &forbidden{X}.
+
+%!trace {"There is a fence"} fence.
+%!trace {"The cottage is by the sea"} sea.
+%!trace {"There is a white fence"} white.

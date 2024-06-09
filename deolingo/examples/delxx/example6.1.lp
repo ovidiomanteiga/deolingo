@@ -1,5 +1,5 @@
 
-% C6 (Defeasible Deontic Detachment) (2nd example: Π ∪ (22) ∪ {f ∨¬f})
+% C6 (Defeasible Deontic Detachment) (1st example: Π ∪ (21) ∪ {f ∨ ¬f})
 
 %!trace_rule {"There must be no fence"}
 &forbidden{fence}.
@@ -17,10 +17,10 @@ fence :- white_fence.
 &obligatory{fence} :- &obligatory{white_fence}.
 
 %!trace_rule {"We must put a street mailbox if we put a fence"}
-&obligatory{mailbox | fence}.
+&obligatory{mailbox} :- fence.
 
 %!trace_rule {"We must not put a street mailbox if we do not put a fence"}
-&obligatory{-mailbox | -fence}.
+&forbidden{mailbox} :- -fence.
 
 % Fence or not fence.
 1 {fence; -fence} 1.

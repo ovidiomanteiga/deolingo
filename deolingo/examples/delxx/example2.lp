@@ -1,5 +1,5 @@
 
-% C6 (Defeasible Deontic Detachment) (2nd example: Π ∪ (22) ∪ {f ∨¬f})
+% C2 (Contrary-to-Duty (CTD) and Compliance)
 
 %!trace_rule {"There must be no fence"}
 &forbidden{fence}.
@@ -16,17 +16,13 @@ fence :- white_fence.
 %!trace_rule {"It is obligatory a fence, if it is obligatory a white fence"}
 &obligatory{fence} :- &obligatory{white_fence}.
 
-%!trace_rule {"We must put a street mailbox if we put a fence"}
-&obligatory{mailbox | fence}.
+%!trace_rule {"You should pay a fine, if you put a fence when forbidden"}
+&obligatory{pay} :- &violated_prohibition{fence}.
 
-%!trace_rule {"We must not put a street mailbox if we do not put a fence"}
-&obligatory{-mailbox | -fence}.
-
-% Fence or not fence.
-1 {fence; -fence} 1.
+%!show_trace &forbidden{X}.
+%!show_trace &obligatory{X}.
 
 %!trace {"There is a fence"} fence.
-%!trace {"There is no fence"} -fence.
-
-%!show_trace &obligatory{X}.
-%!show_trace &forbidden{X}.
+%!trace {"The cottage is by the sea"} sea.
+%!trace {"There is a white fence"} white.
+%!trace {"You should pay a fine"} &obligatory{pay}.
