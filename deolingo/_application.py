@@ -33,6 +33,7 @@ class DeolingoApplication(clingo.Application):
         self._benchmark_flag = clingo.Flag(False)
         self._generate_flag = clingo.Flag(False)
         self._optimize_flag = clingo.Flag(False)
+        self._weak_flag = clingo.Flag(False)
         self._generator = None
         self._n_explanations = 0
         self._temporal_flag = clingo.Flag(False)
@@ -84,6 +85,10 @@ class DeolingoApplication(clingo.Application):
                          "optimize",
                          "Optimize the translation of the deontic logic program",
                          self._optimize_flag)
+        options.add_flag("deontic",
+                         "weak",
+                         "Makes the deontic weak axiom a weak constraint to find inconsistencies",
+                         self._weak_flag)
 
         def parser(value: str):
             from deolingo._generator import Generator
@@ -154,20 +159,21 @@ class DeolingoApplication(clingo.Application):
 
     def _solve_deontic_program(self, program, files):
         from deolingo.domain.solve_deontic_program_command import SolveDeonticProgramCommand
-        command = SolveDeonticProgramCommand(program, files, self._translate_flag.flag, self._optimize_flag.flag)
+        command = SolveDeonticProgramCommand(program, files, self._translate_flag.flag, self._optimize_flag.flag,
+                                             self._weak_flag.flag)
         command.execute()
 
     def _explain_deontic_program(self, program, inputs, n_solutions='1'):
         from deolingo.domain.explain_deontic_program_command import ExplainDeonticProgramCommand
         n_solutions = int(program.configuration.solve.models)
         n_solutions_str = '1' if n_solutions < 0 else str(n_solutions)
-        command = ExplainDeonticProgramCommand(inputs, n_solutions_str, self._n_explanations, self._translate_flag.flag)
+        command = ExplainDeonticProgramCommand(inputs, n_solutions_str, self._n_explanations, self._translate_flag.flag,
+                                               self._weak_flag.flag)
         command.execute()
 
-    @staticmethod
-    def _solve_temporal_deontic_program(program, files):
+    def _solve_temporal_deontic_program(self, program, files):
         from deolingo.domain.solve_temporal_deontic_program_command import SolveTemporalDeonticProgramCommand
-        command = SolveTemporalDeonticProgramCommand(program, files)
+        command = SolveTemporalDeonticProgramCommand(program, files, self._weak_flag.flag)
         command.execute()
 
     # </editor-fold>

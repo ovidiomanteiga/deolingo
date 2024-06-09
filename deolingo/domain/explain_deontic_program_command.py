@@ -5,11 +5,11 @@ from deolingo.xcontrol import XDeolingoControl
 
 class ExplainDeonticProgramCommand(UseCaseCommand):
 
-    def __init__(self, inputs, n_solutions='1', _n_explanations='1', translate=False):
+    def __init__(self, inputs, n_solutions='1', _n_explanations='1', translate=False, weak=False):
         super().__init__()
         self.inputs = inputs
         self.translate = translate
-        self._xcontrol = XDeolingoControl(n_solutions=n_solutions, n_explanations=_n_explanations)
+        self._xcontrol = XDeolingoControl(n_solutions=n_solutions, n_explanations=_n_explanations, weak=weak)
 
     def execute(self):
         self._xcontrol.add_inputs(self.inputs)

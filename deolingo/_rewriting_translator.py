@@ -12,9 +12,9 @@ class DeolingoRewritingTranslator(DeolingoTranslator):
     # <editor-fold desc="Initialization">
 
     def __init__(self, add_to_program_callback, transformer=None, translate=False,
-                 add_theory=True, add_deontic_rules=True):
+                 add_theory=True, add_deontic_rules=True, weak=False):
         transformer = transformer if transformer is not None else DeonticASTRewritingTransformer(translate)
-        super().__init__(add_to_program_callback, transformer, translate, add_theory, add_deontic_rules)
+        super().__init__(add_to_program_callback, transformer, translate, add_theory, add_deontic_rules, weak=weak)
 
     # </editor-fold>
 
@@ -34,7 +34,10 @@ class DeolingoRewritingTranslator(DeolingoTranslator):
             return
         self._deontic_rules_added = True
         necessary_rules = self.deontic_transformer.derivation_rules_to_be_added
-        super()._add_string_to_program("\n".join(DeonticRules.deontic_weak_axiom()) + '\n')
+        if not self.weak:
+            super()._add_string_to_program("\n".join(DeonticRules.deontic_weak_axiom()) + '\n')
+        else:
+            super()._add_string_to_program("\n".join(DeonticRules.deontic_weak_axiom_weak_constraint()) + '\n')
         super()._add_string_to_program("\n".join(DeonticRules.obligation_prohibition_equivalence()) + '\n')
         if len(necessary_rules) == 0:
             return

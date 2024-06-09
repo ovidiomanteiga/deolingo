@@ -13,7 +13,7 @@ class DeolingoTranslator:
     # <editor-fold desc="Initialization">
 
     def __init__(self, add_to_program_callback, transformer=None, translate=False, add_theory=True,
-                 add_deontic_rules=True, temporal=False):
+                 add_deontic_rules=True, temporal=False, weak=False):
         self.deontic_transformer = transformer if transformer is not None else DeonticASTTransformer(translate)
         self._add_to_program_callback = add_to_program_callback
         self.translate = translate
@@ -24,6 +24,7 @@ class DeolingoTranslator:
         self._add_theory = add_theory
         self._add_deontic_rules = add_deontic_rules
         self.temporal = temporal
+        self.weak = weak
 
     # </editor-fold>
 
@@ -125,7 +126,7 @@ class DeolingoTranslator:
         """Add the common deontic rules to the program if not added already."""
         if not self._add_deontic_rules or self._deontic_rules_added:
             return
-        deontic_rules_as_string = DeonticRules.all_rules_as_string()
+        deontic_rules_as_string = DeonticRules.all_rules_as_string(self.weak)
         self._add_string_to_program(deontic_rules_as_string)
         self._deontic_rules_added = True
 

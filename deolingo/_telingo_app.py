@@ -13,9 +13,9 @@ from deolingo._deontic_atom import _DEOLINGO_ATOM_PREFIX
 
 class DeolingoTelingoApp(telingo.TelApp):
 
-    def run(self, program, files):
+    def run(self, program, files, weak=False):
         with ast.ProgramBuilder(program) as builder:
-            transformer = DeolingoTranslator(builder.add, translate=True, temporal=True)
+            transformer = DeolingoTranslator(builder.add, translate=True, temporal=True, weak=weak)
             transformer.transform_sources(None, files)
         translated_program = transformer.translated_program
         if "--translate" in sys.argv:
@@ -51,6 +51,10 @@ class DeolingoTelingoApp(telingo.TelApp):
                         if m.group(2) in ["obligatory", "permitted", "forbidden", "omissible"]\
                                 and m.group(1) != "-" and not m.group(3).startswith('-'):
                             sym = re.sub(pattern, r"\1&\2{\3}", str(sym))
+                            sys.stdout.write("\n ")
+                            sys.stdout.write(" {}".format(sym))
+                        if m.group(2) == "inconsistency":
+                            sym = re.sub(pattern, _DEOLINGO_ATOM_PREFIX + r"\2(\3)", str(sym))
                             sys.stdout.write("\n ")
                             sys.stdout.write(" {}".format(sym))
                     else:

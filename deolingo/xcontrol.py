@@ -20,10 +20,10 @@ def rewrite_program(program):
 
 class XDeolingoControl(XclingoControl):
 
-    def __init__(self, n_solutions='1', n_explanations='1', auto_trace='none'):
+    def __init__(self, n_solutions='1', n_explanations='1', auto_trace='none', weak=False):
         super().__init__(n_solutions=n_solutions, n_explanations=n_explanations, auto_trace=auto_trace)
         self.rewritten_program = ""
-        self._transformer = DeolingoTranslator(self._add_to_xcontrol, translate=True, add_theory=False)
+        self._transformer = DeolingoTranslator(self._add_to_xcontrol, translate=True, add_theory=False, weak=weak)
 
     def add(self, name, parameters, program):
         translated_part = self._transformer.transform_source(program)

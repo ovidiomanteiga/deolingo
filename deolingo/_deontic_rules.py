@@ -5,9 +5,10 @@ from deolingo._deontic_atom import *
 class DeonticRules:
 
     @staticmethod
-    def all_rules():
+    def all_rules(weak=False):
+        weakAxiom = DeonticRules.deontic_weak_axiom_weak_constraint() if weak else DeonticRules.deontic_weak_axiom()
         return [
-            *DeonticRules.deontic_weak_axiom(),
+            *weakAxiom,
             *DeonticRules.violation_fullfillment(),
             *DeonticRules.obligation_prohibition_equivalence(),
             *DeonticRules.implicit_permission_omission(),
@@ -22,8 +23,8 @@ class DeonticRules:
         ]
 
     @staticmethod
-    def all_rules_as_string():
-        return "\n".join(DeonticRules.all_rules()) + '\n'
+    def all_rules_as_string(weak=False):
+        return "\n".join(DeonticRules.all_rules(weak)) + '\n'
 
     @staticmethod
     def deontic_weak_axiom():
@@ -35,8 +36,14 @@ class DeonticRules:
     @staticmethod
     def deontic_weak_axiom_weak_constraint():
         return [
-            f"\n% Deontic weak axiom D for DELX (weak constraint)",
-            f":~ {obligatory('X')}, {forbidden('X')}, not {holds('X')}, not {holds('-X')}. [1@1, X]",
+            "\n% Deontic weak axiom D for DELX (weak constraint)",
+            f"deolingo_inconsistency(X) :- not deolingo_inconsistency(-X),"
+                f" {obligatory('X')}, {forbidden('X')}, not {holds('X')}, not {holds('-X')}.",
+            ":~ deolingo_inconsistency(X). [1@1, X]",
+            "#show deolingo_inconsistency/1.",
+            '%!trace {"INCONSISTENCY: % is obligatory and forbidden without factual information!", X} '
+                'deolingo_inconsistency(X).\n',
+            "%!show_trace deolingo_inconsistency(X).",
         ]
 
     @staticmethod
@@ -99,11 +106,11 @@ class DeonticRules:
         return [
             f"\n% Permitted by default",
             f"{permitted_by_default('X')} :- not not {forbidden('X')}; {deontic('X')}.",
-            f"{permitted_by_default('X')} :- {permitted('X')}; {deontic('X')}.",
+            f"{permitted_by_default('X')} :- {permitted('X')}.",
             f"{permitted('X')} :- not {forbidden('X')}, {permitted_by_default('X')}.",
             f"\n% Omissible by default",
             f"{omissible_by_default('X')} :- not not {obligatory('X')}; {deontic('X')}.",
-            f"{omissible_by_default('X')} :- {omissible('X')}; {deontic('X')}.",
+            f"{omissible_by_default('X')} :- {omissible('X')}.",
             f"{omissible('X')} :- not {obligatory('X')}, {omissible_by_default('X')}.",
         ]
 
@@ -158,7 +165,7 @@ class DeonticRules:
         return [
             f"\n% Default obligation",
             f"{default_obligation('X')} :- not not {permitted('-X')}; {deontic('X')}.",
-            f"{default_obligation('X')} :- {obligatory('X')}; {deontic('X')}.",
+            f"{default_obligation('X')} :- {obligatory('X')}.",
             f"{obligatory('X')} :- not {permitted('-X')}, {default_obligation('X')}.",
         ]
 
@@ -215,7 +222,7 @@ class DeonticRules:
         return [
             f"\n% Default prohibition",
             f"{default_prohibition('X')} :- not not {permitted('X')}; {deontic('X')}.",
-            f"{default_prohibition('X')} :- {forbidden('X')}; {deontic('X')}.",
+            f"{default_prohibition('X')} :- {forbidden('X')}.",
             f"{forbidden('X')} :- not {permitted('X')}, {default_prohibition('X')}.",
         ]
 
@@ -224,5 +231,5 @@ class DeonticRules:
         return [
             f"\n% Deontic",
             f"{deontic('X')} :- {obligatory('X')}.",
-            f"{deontic('X')} :- {forbidden('X')}.",
+            f"{deontic('X')} :- {deontic('-X')}.",
         ]
