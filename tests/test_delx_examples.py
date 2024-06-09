@@ -19,7 +19,7 @@ class DeolingoDELXExamplesTestCase(unittest.TestCase):
         # Assert
         assert len(actual_answer_sets) == 1
         actual_answer_set = set(actual_answer_sets[0])
-        assert actual_answer_set.issuperset(expected_answer_set)
+        assert actual_answer_set == expected_answer_set
 
     def test_delx_example_1_2(self):
         # Arrange
@@ -30,7 +30,7 @@ class DeolingoDELXExamplesTestCase(unittest.TestCase):
         # Assert
         assert len(actual_answer_sets) == 1
         actual_answer_set = set(actual_answer_sets[0])
-        assert actual_answer_set.issuperset(expected_answer_set)
+        assert actual_answer_set == expected_answer_set
 
     def test_delx_example_2(self):
         # Arrange
@@ -41,7 +41,7 @@ class DeolingoDELXExamplesTestCase(unittest.TestCase):
         # Assert
         assert len(actual_answer_sets) == 1
         actual_answer_set = set(actual_answer_sets[0])
-        assert actual_answer_set.issuperset(expected_answer_set)
+        assert actual_answer_set == expected_answer_set
 
     def test_delx_example_3(self):
         # Arrange
@@ -52,26 +52,29 @@ class DeolingoDELXExamplesTestCase(unittest.TestCase):
         # Assert
         assert len(actual_answer_sets) == 1
         actual_answer_set = set(actual_answer_sets[0])
-        assert actual_answer_set.issuperset(expected_answer_set)
+        assert actual_answer_set == expected_answer_set
 
     def test_delx_example_4(self):
         # Arrange
         example = ExampleReader().read_example("delx/example4.lp")
-        expected_answer_set = {'&forbidden{f}'}
+        expected_answer_set = {'&permitted{f}', 'f', 's'}
         # Act
         actual_answer_sets = self.get_sut().solve(example.contents)
         # Assert
         assert len(actual_answer_sets) == 1
         actual_answer_set = set(actual_answer_sets[0])
-        assert actual_answer_set.issuperset(expected_answer_set)
+        assert actual_answer_set == expected_answer_set
 
     def test_delx_example_5_1(self):
         # Arrange
         example = ExampleReader().read_example("delx/example5.1.lp")
+        expected_answer_set = {'&forbidden{f}', '&forbidden{w}', 'f', '&obligatory{w}', '&obligatory{f}', 'w'}
         # Act
         actual_answer_sets = self.get_sut().solve(example.contents)
         # Assert
-        assert actual_answer_sets == []
+        assert len(actual_answer_sets) == 1
+        actual_answer_set = set(actual_answer_sets[0])
+        assert actual_answer_set == expected_answer_set
 
     def test_delx_example_5_2(self):
         # Arrange
@@ -82,7 +85,7 @@ class DeolingoDELXExamplesTestCase(unittest.TestCase):
         # Assert
         assert len(actual_answer_sets) == 1
         actual_answer_set = set(actual_answer_sets[0])
-        assert actual_answer_set.issuperset(expected_answer_set)
+        assert actual_answer_set == expected_answer_set
 
     def test_delx_example_6_1(self):
         # Arrange
@@ -99,8 +102,8 @@ class DeolingoDELXExamplesTestCase(unittest.TestCase):
         assert len(actual_answer_sets) == 2
         actual_answer_set_0 = set(actual_answer_sets[0])
         actual_answer_set_1 = set(actual_answer_sets[1])
-        assert actual_answer_set_0.issuperset(expected_answer_sets[0])
-        assert actual_answer_set_1.issuperset(expected_answer_sets[1])
+        assert actual_answer_set_0 == expected_answer_sets[0]
+        assert actual_answer_set_1 == expected_answer_sets[1]
 
     def test_delx_example_6_2(self):
         # Arrange
@@ -117,8 +120,8 @@ class DeolingoDELXExamplesTestCase(unittest.TestCase):
         assert len(actual_answer_sets) == 2
         actual_answer_set_0 = set(actual_answer_sets[0])
         actual_answer_set_1 = set(actual_answer_sets[1])
-        assert actual_answer_set_0.issuperset(expected_answer_sets[0])
-        assert actual_answer_set_1.issuperset(expected_answer_sets[1])
+        assert actual_answer_set_0 == expected_answer_sets[0]
+        assert actual_answer_set_1 == expected_answer_sets[1]
 
 
 class DeolingoDELXExamplesOptimizedTestCase(DeolingoDELXExamplesTestCase):

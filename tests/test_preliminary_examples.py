@@ -20,7 +20,7 @@ class DeolingoPreliminaryExamplesTestCase(unittest.TestCase):
         # Assert
         assert len(actual_answer_sets) == 1
         actual_answer_set = set(actual_answer_sets[0])
-        assert actual_answer_set.issuperset(expected_answer_set)
+        assert actual_answer_set == expected_answer_set
     
     def test_preliminary_example_2(self):
         # Arrange
@@ -31,7 +31,7 @@ class DeolingoPreliminaryExamplesTestCase(unittest.TestCase):
         # Assert
         assert len(actual_answer_sets) == 1
         actual_answer_set = set(actual_answer_sets[0])
-        assert actual_answer_set.issuperset(expected_answer_set)
+        assert actual_answer_set == expected_answer_set
     
     def test_preliminary_example_3(self):
         # Arrange
@@ -51,7 +51,7 @@ class DeolingoPreliminaryExamplesTestCase(unittest.TestCase):
         # Assert
         assert len(actual_answer_sets) == 1
         actual_answer_set = set(actual_answer_sets[0])
-        assert actual_answer_set.issuperset(expected_answer_set)
+        assert actual_answer_set == expected_answer_set
     
     def test_preliminary_example_5(self):
         # Arrange
@@ -62,7 +62,7 @@ class DeolingoPreliminaryExamplesTestCase(unittest.TestCase):
         # Assert
         assert len(actual_answer_sets) == 1
         actual_answer_set = set(actual_answer_sets[0])
-        assert actual_answer_set.issuperset(expected_answer_set)
+        assert actual_answer_set == expected_answer_set
 
 
 class DeolingoPreliminaryExamplesOptimizedTestCase(DeolingoPreliminaryExamplesTestCase):

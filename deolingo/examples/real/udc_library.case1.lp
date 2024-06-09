@@ -55,7 +55,7 @@ violated(Person, curfew) :- &violated_prohibition{go_out(Person)}, curfew.
 %!trace_rule {"It is obligatory to call the police if someone violated the curfew"}
 &obligatory{call_the_police} :- &violated_prohibition{go_out(Person)}, curfew.
 
-%!trace_rule {"% violated the curfew",Person}
+%!trace_rule {"% violated the curfew",User}
 violated(User, max_loan_policy) :- &violated_prohibition{exceed_max_docs_loan(User)}.
 
 %!trace_rule {"% must notify the library since she violated the return policy during the curfew",User}

@@ -26,7 +26,7 @@ fence :- white_fence.
 fence.
 
 % The fence is white.
--white_fence.
+white_fence.
 
 %!show_trace &obligatory{X}.
 %!show_trace &permitted{X}.
