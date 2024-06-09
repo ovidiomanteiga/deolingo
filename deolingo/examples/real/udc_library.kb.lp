@@ -78,7 +78,9 @@ id_document(university_id_card; official_id_card).
 % 5. Non-compliance with loan rules
 
 % 5.1. Users have the obligation to return the loaned documents within the deadline. Similarly, if a document is borrowed by academic year, there is an obligation to return it when requested by another user.
+%!trace_rule {"The book % borrowed by % is overdue % days", Document, User, DaysBorrowed}
 overdue(Document, User) :- borrowed(Document, User, DaysBorrowed), DaysBorrowed > Max, max_loan_days_user(User, Max).
+%!trace_rule {"% must return % because it is overdue", User, Document}
 &obligatory{return(Document, User)} :- overdue(Document, User).
 &obligatory{return(Document, User)} :- borrowed_for_year(Document, User, Year), reservation(Document, AnotherUser), User!=AnotherUser.
 borrowed(Document, User) :- borrowed_for_year(Document, User, Year), year(Year).
