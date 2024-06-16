@@ -3,14 +3,9 @@ import sys
 from typing import Callable
 
 import clingo
-import clingo.ast as ast
 
 import deolingo._version as deolingo_version
 from deolingo._answer_set_rewriter import DeonticAnswerSetRewriter
-from deolingo._rewriting_translator import DeolingoRewritingTranslator
-from deolingo._telingo_app import DeolingoTelingoApp
-from deolingo._translator import DeolingoTranslator
-from deolingo.xcontrol import XDeolingoControl
 
 
 class DeolingoApplication(clingo.Application):
