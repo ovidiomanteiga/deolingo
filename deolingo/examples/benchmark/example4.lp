@@ -37,18 +37,13 @@ points_deducted_from_license(Owner, Points) :- speed_violation(Owner, _, Points,
 can_go_to_jail(Owner) :- speed_violation(Owner, _, _, "yes").
 
 % Cars and their owners
-car(audi; mercedes; ferrari).
-
-owner(john; alice; andrea).
-
-owned_by(john,audi).
-owned_by(alice,mercedes).
-owned_by(andrea,ferrari).
+#const n=45.
+car(1..n).
+owner(1..n).
+owned_by(Owner,Car) :- owner(Owner), car(Car), Owner=Car.
 
 % Speed of cars measured in km/h by the police
-1 {speed(audi, S): speed_value(S), S>120} 1.
-1 {speed(mercedes, S): speed_value(S), S>150} 1.
-1 {speed(ferrari, S): speed_value(S), S>180} 1.
+1 {speed(C, S): speed_value(S), S>120+C} 1 :- car(C).
 
 pay_due(Owner,FineAmount) :- &obligatory{pay(Owner, FineAmount)}.
 
