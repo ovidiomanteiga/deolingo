@@ -30,6 +30,7 @@ class DeolingoApplication(clingo.Application):
         self._optimize_flag = clingo.Flag(False)
         self._weak_flag = clingo.Flag(False)
         self._generator = None
+        self._llm = None
         self._n_explanations = 0
         self._temporal_flag = clingo.Flag(False)
         self._answer_set_rewriter = DeonticAnswerSetRewriter()
@@ -93,11 +94,17 @@ class DeolingoApplication(clingo.Application):
             except ValueError:
                 return False
 
+        def llm_parser(value: str):
+            self._llm = value
+            return True
+
         def xparser(value: str):
             self._n_explanations = int(value)
             return True
-        options.add("deontic", "generator", "Generative AI API to user in --generate mode",
+        options.add("deontic", "generator", "Generative AI API to use in --generate mode",
                     parser, False, "gemini|gpt4all|openai|huggingfacehub")
+        options.add("deontic", "llm", "Generative AI LLM model to be used in --generate mode",
+                    llm_parser, False, "gemini-1.5-flash-latest")
         options.add("deontic", "explanations", "Number of explanations to generate",
                     xparser, False, "0..N")
         options.add_flag("deontic",
@@ -149,7 +156,7 @@ class DeolingoApplication(clingo.Application):
 
     def _generate_deontic_program(self, inputs):
         from deolingo.domain.generate_deontic_program_command import GenerateDeonticProgramCommand
-        command = GenerateDeonticProgramCommand(inputs[0], generator_type=self._generator)
+        command = GenerateDeonticProgramCommand(inputs[0], generator_type=self._generator, llm=self._llm)
         command.execute()
 
     def _solve_deontic_program(self, program, files):
