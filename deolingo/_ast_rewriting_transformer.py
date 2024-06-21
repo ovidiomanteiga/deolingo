@@ -92,10 +92,10 @@ class DeonticASTRewritingTransformer(DeonticASTTransformer):
                     new_term_2.sign = ast.Sign.Negation
                     new_term_3.sign = ast.Sign.Negation
                 if not is_fulfillment and not is_undetermined:
-                    new_term_2.atom.symbol.name = "-" + new_term_2.atom.symbol.name
+                    self._negate_deontic_atom_content(new_term_2)
                 new_literals.append({'term': new_term_2, 'condition': new_condition})
                 if is_undetermined:
-                    new_term_3.atom.symbol.name = "-" + new_term_3.atom.symbol.name
+                    self._negate_deontic_atom_content(new_term_3)
                     new_literals.append({'term': new_term_3, 'condition': new_condition})
             elif new_term.atom.symbol.name in [DeonticAtoms.VIOLATED_PROHIBITION.value.prefixed(),
                                                DeonticAtoms.FULFILLED_PROHIBITION.value.prefixed(),
@@ -117,7 +117,7 @@ class DeonticASTRewritingTransformer(DeonticASTTransformer):
                 if is_negated:
                     new_term_2.sign = ast.Sign.Negation
                 if is_fulfillment:
-                    new_term_2.atom.symbol.name = "-" + new_term_2.atom.symbol.name
+                    self._negate_deontic_atom_content(new_term_2)
                 new_literals.append({'term': new_term_2, 'condition': new_condition})
             elif new_term.atom.symbol.name in [DeonticAtoms.PERMITTED_IMPLICITLY.value.prefixed()]:
                 new_term.atom.symbol.name = DeonticAtoms.FORBIDDEN.value.prefixed()
@@ -158,5 +158,16 @@ class DeonticASTRewritingTransformer(DeonticASTTransformer):
                 new_head_elements.extend(self._head_theory_atoms_sequence)
                 new_head = ast.Disjunction(new_head.location, new_head_elements)
         return multi_rule, new_head
+
+    def _negate_deontic_atom_content(self, deontic_atom):
+        if deontic_atom.atom.symbol.ast_type == ast.ASTType.Function:
+            if deontic_atom.atom.symbol.arguments[0].ast_type == ast.ASTType.UnaryOperation:
+                deontic_atom.atom.symbol.arguments[0] = deontic_atom.atom.symbol.arguments[0].argument
+            else:
+                arg0 = deontic_atom.atom.symbol.arguments[0]
+                deontic_atom.atom.symbol.arguments[0] = \
+                    ast.UnaryOperation(deontic_atom.location, ast.UnaryOperator.Minus, arg0)
+        else:
+            deontic_atom.atom.symbol.name = "-" + deontic_atom.atom.symbol.name
 
     # </editor-fold>

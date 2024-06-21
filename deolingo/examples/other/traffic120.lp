@@ -23,7 +23,7 @@ violation_severity(190, 1000, 600, 6, "yes").
 
 % Consequences of speed violation for the owner of a car depending on the speed of the car.
 speed_violation(Owner, FineAmount, Points, Criminal) :-
-                        &violated_obligation{max_speed(Car, SpeedLimit)},
+                        &violated_obligation{max_speed(Car, SpeedLimit)}, speed_limit(SpeedLimit),
                         max_speed(Car, MaxS), MaxS>MinSInRange, MaxS<=MaxSInRange, owned_by(Owner, Car),
                         violation_severity(MinSInRange, MaxSInRange, FineAmount, Points, Criminal).
 
@@ -58,3 +58,4 @@ speed(ferrari, 195).
 #show max_speed/2.
 #show points_deducted_from_license/2.
 #show can_go_to_jail/1.
+#show speed_violation/4.

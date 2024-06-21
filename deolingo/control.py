@@ -20,7 +20,7 @@ class DeolingoControl(Control):
         super().__init__(arguments, logger, message_limit)
         self._translate_control = Control(arguments, logger, message_limit)
         self._program_builder = ast.ProgramBuilder(self._translate_control)
-        self._transformer = DeolingoRewritingTranslator(self._program_builder.add, translate=True) if optimize \
+        self._transformer = DeolingoRewritingTranslator(self._program_builder.add, translate=True, add_theory=False) if optimize \
             else DeolingoTranslator(self._program_builder.add, translate=True)
         self._rewriter = DeonticAnswerSetRewriter(grouped=grouped)
         self._add_deolingo_theory_and_deontic_rules()
