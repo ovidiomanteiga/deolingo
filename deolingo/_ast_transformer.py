@@ -25,6 +25,7 @@ class DeonticASTTransformer(Transformer):
         self._in_rule = False
         self._deontic_conditional = None
         self._file = None
+        self._last_xclingo_comment = None
 
     # </editor-fold>
 
@@ -34,6 +35,7 @@ class DeonticASTTransformer(Transformer):
         if not comment.value.startswith("%!"):
             raise MultipleRuleException([])
         self._add_to_translation(comment.location, comment)
+        self._last_xclingo_comment = comment
         return comment
 
     def visit_Rule(self, rule):
@@ -55,7 +57,8 @@ class DeonticASTTransformer(Transformer):
         assert new_body is not None
         if multi_rule is not None:
             for rule in multi_rule:
-                rule.body.extend(new_body)
+                if rule.ast_type != ast.ASTType.Comment:
+                    rule.body.extend(new_body)
             raise MultipleRuleException(multi_rule, rule.location)
         new_rule = ast.Rule(rule.location, new_head, new_body)
         self._add_to_translation(rule.location, new_rule)
@@ -78,6 +81,7 @@ class DeonticASTTransformer(Transformer):
             return 'condition' in lit and lit['condition'] is not None and \
                 lit['condition'] != []
         if self._in_head:
+            self._last_literal_sign = ast.Sign.NoSign
             iterable, literals, deontic_conditional = self._map_deontic_atom_with_sequence(atom)
             if deontic_conditional is not None:
                 self._deontic_conditional = deontic_conditional
@@ -121,7 +125,12 @@ class DeonticASTTransformer(Transformer):
                 ob_nv_term = self._deontic_conditional.condition.atom.symbol
                 ob_nv_atom = _symbolic_atom(rule.location, ob_nv_atom_name, [ob_nv_term])
                 new_rule_2.body = [_positive_literal(rule.location, ob_nv_atom)]
-                multi_rule = [new_rule, new_rule_2]
+                if self._last_xclingo_comment is not None:
+                    comment = self._last_xclingo_comment
+                    multi_rule = [new_rule, comment, new_rule_2]
+                    self._last_xclingo_comment = None
+                else:
+                    multi_rule = [new_rule, new_rule_2]
             else:
                 new_head_elements.extend(self._head_theory_atoms_sequence)
                 new_head = ast.Disjunction(new_head.location, new_head_elements)
