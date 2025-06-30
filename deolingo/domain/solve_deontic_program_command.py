@@ -26,6 +26,5 @@ class SolveDeonticProgramCommand(UseCaseCommand):
         if self.translate:
             print(transformer.translated_program)
             return
-        self.program.configuration.solve.quiet = True
         self.program.ground([("base", [])])
         self.program.solve(on_model=None, async_=False)
