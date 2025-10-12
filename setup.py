@@ -15,8 +15,20 @@ setup(
     packages=find_packages(),
     include_package_data=True,
     install_requires=[
+        'cffi>=1.16.0',
         'clingo>=5.7.1',
-        'clingox>=1.2.0'
+        'clingox>=1.2.1',
+        'pycparser>=2.21',
+        'prettytable>=2.2.0',
+        'xclingo~=2.0b12',
+        'langchain~=0.1.0',
+        'openai~=1.30.1',
+        'langchain-openai~=0.1.7',
+        'gpt4all~=2.6.0',
+        'transformers~=4.40.2',
+        'google-generativeai~=0.5.3',
+        'telingo~=2.1.2',
+        'python-dotenv~=1.0.1'
     ],
     entry_points={
         'console_scripts': [
