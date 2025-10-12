@@ -42,6 +42,7 @@ class DeonticASTTransformer(Transformer):
         self._head_theory_atoms_sequence = []
         self._body_theory_atoms_sequence = []
         self._deontic_conditional = None
+        self._last_literal_sign = None
         multi_rule = None
         new_head = self.visit(rule.head)
         multi_rule, new_head = self._process_theory_atoms_in_head(multi_rule, new_head, rule)
