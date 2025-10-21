@@ -157,11 +157,15 @@ class DeonticASTTransformer(Transformer):
         sign = self._last_literal_sign if self._last_literal_sign is not None else ast.Sign.NoSign
         new_deontic_atoms = []
 
-        def symbolize_terms(terms):
+        def symbolize_terms(terms, new_name, original_arguments):
             new_terms = [theory_term_to_term(t) for t in terms]
             for t in new_terms:
                 if t.ast_type != ast.ASTType.Variable:
                     new_deontic_atoms.append(t)
+            if new_name == "deolingo_maintain_obligation" or new_name == "deolingo_achieve_obligation":
+                new_terms.append(original_arguments[0])
+                if original_arguments[0].ast_type != ast.ASTType.Variable:
+                    new_deontic_atoms.append(original_arguments[0])
             return _symbolic_literal(atom.term.location, sign, new_name, new_terms)
         is_disjunction = _DeonticDisjunctionOrConjunction.transform_deontic_atom(atom, operator="||")
         if is_disjunction and self._in_body:
@@ -169,7 +173,7 @@ class DeonticASTTransformer(Transformer):
         is_conjunction = _DeonticDisjunctionOrConjunction.transform_deontic_atom(atom, operator="&&")
         if is_conjunction and self._in_head:
             raise Exception(f"Conjunction '{atom}' not allowed in head")
-        new_atoms = [{'term': symbolize_terms(the_term.terms), 'condition': the_term.condition}
+        new_atoms = [{'term': symbolize_terms(the_term.terms, new_name, atom.term.arguments), 'condition': the_term.condition}
                      for the_term in atom.elements]
         for new_deontic_atom in new_deontic_atoms:
             if new_deontic_atom.ast_type != ast.ASTType.Variable:

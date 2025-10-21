@@ -35,7 +35,11 @@ class DeonticAtom:
     def prefixed_long_name(self):
         return self.prefix(self.long_name)
 
-    def wrap(self, atom):
+    def wrap(self, atom, until=None, prev=False, next=False):
+        if until is not None or prev or next:
+            prefixed = self.prefixed()
+            temporal_atom = ("'" + prefixed) if prev else (prefixed + "'" if next else prefixed)
+            return f"{temporal_atom}({atom}, {until})"
         return f"{self.prefixed()}({atom})"
 
     @staticmethod
@@ -78,6 +82,8 @@ class DeonticAtoms(Enum):
     NON_FULFILLED_PROHIBITION = DeonticAtom("fb_nf", "non_fulfilled_prohibition")
     UNDETERMINED_PROHIBITION = DeonticAtom("fb_u", "undetermined_prohibition")
     DEFAULT_PROHIBITION = DeonticAtom("fb_d", "default_prohibition")
+    MAINTAIN_OBLIGATION = DeonticAtom("m_ob", "maintain_obligation")
+    ACHIEVE_OBLIGATION = DeonticAtom("a_ob", "achieve_obligation")
 
     @classmethod
     def get_all(cls):
@@ -215,3 +221,9 @@ def undetermined_prohibition(deontic_atom):
 
 def default_prohibition(deontic_atom):
     return DeonticAtoms.DEFAULT_PROHIBITION.value.wrap(deontic_atom)
+
+def maintain_obligation(deontic_atom, until, prev=False, next=False):
+    return DeonticAtoms.MAINTAIN_OBLIGATION.value.wrap(deontic_atom, until, prev=prev, next=next)
+
+def achieve_obligation(deontic_atom, until, prev=False, next=False):
+    return DeonticAtoms.ACHIEVE_OBLIGATION.value.wrap(deontic_atom, until, prev=prev, next=next)

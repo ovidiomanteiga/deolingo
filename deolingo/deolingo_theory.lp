@@ -32,5 +32,7 @@
     &non_fulfilled_prohibition/0 : deontic_term, any;
     &undetermined_prohibition/0 : deontic_term, any;
     &default_prohibition/0 : deontic_term, any;
+    &maintain_obligation/1 : deontic_term, any;
+    &achieve_obligation/1 : deontic_term, any;
     &show/0 : show_term, directive
 }.

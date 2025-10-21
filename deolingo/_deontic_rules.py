@@ -5,9 +5,9 @@ from deolingo._deontic_atom import *
 class DeonticRules:
 
     @staticmethod
-    def all_rules(weak=False):
+    def all_rules(weak=False, temporal=False):
         weakAxiom = DeonticRules.deontic_weak_axiom_weak_constraint() if weak else DeonticRules.deontic_weak_axiom()
-        return [
+        rules = [
             *weakAxiom,
             *DeonticRules.violation_fullfillment(),
             *DeonticRules.obligation_prohibition_equivalence(),
@@ -21,10 +21,14 @@ class DeonticRules:
             *DeonticRules.default_prohibition(),
             *DeonticRules.deontic_rules(),
         ]
+        if temporal:
+            rules.extend(DeonticRules.maintain_obligation_rules())
+            rules.extend(DeonticRules.achieve_obligation_rules())
+        return rules
 
     @staticmethod
-    def all_rules_as_string(weak=False):
-        return "\n".join(DeonticRules.all_rules(weak)) + '\n'
+    def all_rules_as_string(weak=False, temporal=False):
+        return "\n".join(DeonticRules.all_rules(weak=weak, temporal=temporal)) + '\n'
 
     @staticmethod
     def deontic_weak_axiom():
@@ -232,4 +236,24 @@ class DeonticRules:
             f"\n% Deontic",
             f"{deontic('X')} :- {obligatory('X')}.",
             f"{deontic('X')} :- {deontic('-X')}.",
+        ]
+
+    @staticmethod
+    def maintain_obligation_rules():
+        return [
+            f"\n% Maintain Obligation",
+            f"#program dynamic.",
+            f"{maintain_obligation('Obligation', 'Until')} :- {maintain_obligation('Obligation', 'Until', prev=True)}, not {holds('Until')}.",
+            f"#program always.",
+            f"{obligatory('Obligation')} :- {maintain_obligation('Obligation', 'Until')}, not {holds('Until')}.",
+        ]
+
+    @staticmethod
+    def achieve_obligation_rules():
+        return [
+            f"\n% Achieve Obligation",
+            f"#program dynamic.",
+            f"{achieve_obligation('Obligation', 'Until')} :- {achieve_obligation('Obligation', 'Until', prev=True)}, not {holds('Until')}, not {holds('Obligation')}.",
+            f"#program always.",
+            f"{obligatory('Obligation')} :- {achieve_obligation('Obligation', 'Until')}, not {holds('Until')}, not {holds('Obligation')}.",
         ]

@@ -103,6 +103,8 @@ class DeolingoTranslator:
         """Add the reified truth rules for each deontic atom."""
         if not self._add_deontic_rules:
             return
+        if self.temporal:
+            self._add_string_to_program("#program always.\n")
         for deontic_atom in self.deontic_transformer.deontic_atoms:
             holds_positive = holds(deontic_atom)
             holds_negative = holds(f"-{deontic_atom}")
@@ -126,7 +128,7 @@ class DeolingoTranslator:
         """Add the common deontic rules to the program if not added already."""
         if not self._add_deontic_rules or self._deontic_rules_added:
             return
-        deontic_rules_as_string = DeonticRules.all_rules_as_string(self.weak)
+        deontic_rules_as_string = DeonticRules.all_rules_as_string(weak=self.weak, temporal=self.temporal)
         self._add_string_to_program(deontic_rules_as_string)
         self._deontic_rules_added = True
 

@@ -36,6 +36,8 @@ _DEOLINGO_THEORY = f"""
     &{Deo.NON_FULFILLED_PROHIBITION.value.name}/0 : deontic_term, any;
     &{Deo.UNDETERMINED_PROHIBITION.value.name}/0 : deontic_term, any;
     &{Deo.DEFAULT_PROHIBITION.value.name}/0 : deontic_term, any;
+    &{Deo.MAINTAIN_OBLIGATION.value.name}/1 : deontic_term, any;
+    &{Deo.ACHIEVE_OBLIGATION.value.name}/1 : deontic_term, any;
     &show/0 : show_term, directive
 }}.
 """
