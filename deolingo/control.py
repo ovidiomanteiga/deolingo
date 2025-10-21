@@ -44,8 +44,16 @@ class DeolingoControl(Control):
         yield_: bool = False,
         async_: bool = False,
     ) -> Union[SolveHandle, SolveResult]:
-        return super().solve(assumptions, self._on_model(on_model), on_unsat, on_statistics,
-                             on_finish, on_core, yield_, async_)
+        return super().solve(
+            assumptions=assumptions,
+            on_model=self._on_model(on_model),
+            on_unsat=on_unsat,
+            on_statistics=on_statistics,
+            on_finish=on_finish,
+            on_core=on_core,
+            yield_=yield_,
+            async_=async_
+        )
 
     # </editor-fold>
 
