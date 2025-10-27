@@ -162,7 +162,7 @@ class DeonticASTTransformer(Transformer):
             for t in new_terms:
                 if t.ast_type != ast.ASTType.Variable:
                     new_deontic_atoms.append(t)
-            if new_name == "deolingo_maintain_obligation" or new_name == "deolingo_achieve_obligation":
+            if new_name in DeonticAtoms.get_all_temporal_names():
                 new_terms.append(original_arguments[0])
                 if original_arguments[0].ast_type != ast.ASTType.Variable:
                     new_deontic_atoms.append(original_arguments[0])

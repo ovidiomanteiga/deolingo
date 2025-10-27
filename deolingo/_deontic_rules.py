@@ -22,8 +22,8 @@ class DeonticRules:
             *DeonticRules.deontic_rules(),
         ]
         if temporal:
-            rules.extend(DeonticRules.maintain_obligation_rules())
-            rules.extend(DeonticRules.achieve_obligation_rules())
+            rules.extend(DeonticRules.maintain_rules())
+            rules.extend(DeonticRules.achieve_rules())
         return rules
 
     @staticmethod
@@ -239,21 +239,39 @@ class DeonticRules:
         ]
 
     @staticmethod
-    def maintain_obligation_rules():
+    def maintain_rules():
         return [
             f"\n% Maintain Obligation",
             f"#program dynamic.",
-            f"{maintain_obligation('Obligation', 'Until')} :- {maintain_obligation('Obligation', 'Until', prev=True)}, not {holds('Until')}.",
+            f"{maintain_obligation('Obligation', 'Until')} :- {maintain_obligation('Obligation', 'Until', prev=True)}, not {holds('Until')}, not {not_maintain_obligation('Obligation', 'Until')}.",
+            f"{maintain_default_obligation('Obligation', 'Until')} :- {maintain_default_obligation('Obligation', 'Until', prev=True)}, not {holds('Until')}, not {not_maintain_obligation('Obligation', 'Until')}.",
+            f"{maintain_permission('Permission', 'Until')} :- {maintain_permission('Permission', 'Until', prev=True)}, not {holds('Until')}.",
+            f"{maintain_prohibition('Prohibition', 'Until')} :- {maintain_prohibition('Prohibition', 'Until', prev=True)}, not {holds('Until')}.",
+            f"{maintain_omission('Omission', 'Until')} :- {maintain_omission('Omission', 'Until', prev=True)}, not {holds('Until')}.",
             f"#program always.",
             f"{obligatory('Obligation')} :- {maintain_obligation('Obligation', 'Until')}, not {holds('Until')}.",
+            f"{default_obligation('Obligation')} :- {maintain_default_obligation('Obligation', 'Until')}, not {holds('Until')}.",
+            f"-{maintain_obligation('Obligation', 'Until')} :- {not_maintain_obligation('Obligation', 'Until')}.",
+            f"{not_maintain_obligation('Obligation', 'Until')} :- -{maintain_obligation('Obligation', 'Until')}.",
+            f"{permitted('Permission')} :- {maintain_permission('Permission', 'Until')}, not {holds('Until')}.",
+            f"{forbidden('Prohibition')} :- {maintain_prohibition('Prohibition', 'Until')}, not {holds('Until')}.",
+            f"{omissible('Omission')} :- {maintain_omission('Omission', 'Until')}, not {holds('Until')}.",
         ]
 
     @staticmethod
-    def achieve_obligation_rules():
+    def achieve_rules():
         return [
             f"\n% Achieve Obligation",
             f"#program dynamic.",
-            f"{achieve_obligation('Obligation', 'Until')} :- {achieve_obligation('Obligation', 'Until', prev=True)}, not {holds('Until')}, not {holds('Obligation')}.",
+            f"{achieve_obligation('Obligation', 'Until')} :- {achieve_obligation('Obligation', 'Until', prev=True)}, not {holds('Until')}, not {holds('Obligation')}, not {not_achieve_obligation('Obligation', 'Until')}.",
+            f"{achieve_permission('Permission', 'Until')} :- {achieve_permission('Permission', 'Until', prev=True)}, not {holds('Until')}, not {holds('Permission')}."
+            f"{achieve_prohibition('Prohibition', 'Until')} :- {achieve_prohibition('Prohibition', 'Until', prev=True)}, not {holds('Until')}, not {holds('Prohibition')}.",
+            f"{achieve_omission('Omission', 'Until')} :- {achieve_omission('Omission', 'Until', prev=True)}, not {holds('Until')}, not {holds('Omission')}.",
             f"#program always.",
             f"{obligatory('Obligation')} :- {achieve_obligation('Obligation', 'Until')}, not {holds('Until')}, not {holds('Obligation')}.",
+            f"-{achieve_obligation('Obligation', 'Until')} :- {not_achieve_obligation('Obligation', 'Until')}.",
+            f"{not_achieve_obligation('Obligation', 'Until')} :- -{achieve_obligation('Obligation', 'Until')}.",
+            f"{permitted('Permission')} :- {achieve_permission('Permission', 'Until')}, not {holds('Until')}, not {holds('Permission')}.",
+            f"{forbidden('Prohibition')} :- {achieve_prohibition('Prohibition', 'Until')}, not {holds('Until')}, not {holds('Prohibition')}.",
+            f"{omissible('Omission')} :- {achieve_omission('Omission', 'Until')}, not {holds('Until')}, not {holds('Omission')}.",
         ]
