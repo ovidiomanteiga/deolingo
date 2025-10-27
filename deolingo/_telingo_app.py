@@ -1,4 +1,5 @@
 
+import re
 import sys
 
 import clingo
@@ -8,20 +9,23 @@ import tempfile
 from clingo import ast, SymbolType, Function
 
 from deolingo._translator import DeolingoTranslator
-from deolingo._deontic_atom import _DEOLINGO_ATOM_PREFIX
+from deolingo._deontic_atom import DeonticAtoms, _DEOLINGO_ATOM_PREFIX
 
 
 class DeolingoTelingoApp(telingo.TelApp):
 
-    def run(self, program, files, weak=False):
+    def run(self, program, files, weak=False, preprocess_theory_atoms=True):
         with ast.ProgramBuilder(program) as builder:
             transformer = DeolingoTranslator(builder.add, translate=True, temporal=True, weak=weak)
-            transformer.transform_sources(None, files)
+            if preprocess_theory_atoms:
+                preprocessed_sources = DeolingoTelingoApp.preprocess_deontic_theory_atoms(files)
+                transformer.transform_sources(preprocessed_sources)
+            else:
+                transformer.transform_sources(None, files)
         translated_program = transformer.translated_program
         if "--translate" in sys.argv:
             print(translated_program)
             return
-
         # Create a named temporary file (automatically deleted on close)
         with tempfile.NamedTemporaryFile(mode="w+t", delete=False) as temp_file:
             temp_file.write(translated_program)
@@ -30,6 +34,18 @@ class DeolingoTelingoApp(telingo.TelApp):
             temp_file.close()  # Important: close the file first to release the handle
             import os
             os.remove(temp_file.name)
+
+    @staticmethod
+    def preprocess_deontic_theory_atoms(files) -> list[str]:
+        sources = [open(file, "r").read() for file in files]
+        preprocessed_sources = []
+        for src in sources:
+            for atom in DeonticAtoms.get_all_names():
+                pattern = r"&" + atom + r"{(.+?)}"
+                replacement = f"deolingo_{atom}(\\1)"
+                src = re.sub(pattern, replacement, src)
+            preprocessed_sources.append(src)
+        return preprocessed_sources
 
     def print_model(self, model, printer):
         table = {}
