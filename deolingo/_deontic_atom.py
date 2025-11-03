@@ -39,7 +39,8 @@ class DeonticAtom:
         if until is not None or prev or next:
             prefixed = self.prefixed()
             temporal_atom = ("'" + prefixed) if prev else (prefixed + "'" if next else prefixed)
-            return f"{temporal_atom}({atom}, {until})"
+            until_str = f", {until}" if until is not None else ""
+            return f"{temporal_atom}({atom}{until_str})"
         return f"{self.prefixed()}({atom})"
 
     @staticmethod
@@ -82,21 +83,35 @@ class DeonticAtoms(Enum):
     NON_FULFILLED_PROHIBITION = DeonticAtom("fb_nf", "non_fulfilled_prohibition")
     UNDETERMINED_PROHIBITION = DeonticAtom("fb_u", "undetermined_prohibition")
     DEFAULT_PROHIBITION = DeonticAtom("fb_d", "default_prohibition")
+    # Temporal deontic atoms
+    # Obligations
     MAINTAIN_OBLIGATION = DeonticAtom("m_ob", "maintain_obligation")
-    ACHIEVE_OBLIGATION = DeonticAtom("a_ob", "achieve_obligation")
-    NOT_MAINTAIN_OBLIGATION = DeonticAtom("nm_ob", "not_maintain_obligation")
-    NOT_ACHIEVE_OBLIGATION = DeonticAtom("na_ob", "not_achieve_obligation")
+    CANCEL_MAINTAIN_OBLIGATION = DeonticAtom("cm_ob", "cancel_maintain_obligation")
     MAINTAIN_DEFAULT_OBLIGATION = DeonticAtom("m_dob", "maintain_default_obligation")
+    CANCEL_MAINTAIN_DEFAULT_OBLIGATION = DeonticAtom("cm_dob", "cancel_maintain_default_obligation")
+    ACHIEVE_OBLIGATION = DeonticAtom("a_ob", "achieve_obligation")
+    CANCEL_ACHIEVE_OBLIGATION = DeonticAtom("ca_ob", "cancel_achieve_obligation")
+    # Permissions
     MAINTAIN_PERMISSION = DeonticAtom("m_pm", "maintain_permission")
+    CANCEL_MAINTAIN_PERMISSION = DeonticAtom("cm_pm", "cancel_maintain_permission")
+    MAINTAIN_DEFAULT_PERMISSION = DeonticAtom("m_dpm", "maintain_default_permission")
+    CANCEL_MAINTAIN_DEFAULT_PERMISSION = DeonticAtom("cm_dpm", "cancel_maintain_default_permission")
     ACHIEVE_PERMISSION = DeonticAtom("a_pm", "achieve_permission")
+    CANCEL_ACHIEVE_PERMISSION = DeonticAtom("ca_pm", "cancel_achieve_permission")
+    # Prohibitions
     MAINTAIN_PROHIBITION = DeonticAtom("m_fb", "maintain_prohibition")
-    ACHIEVE_PROHIBITION = DeonticAtom("a_fb", "achieve_prohibition")
-    NOT_MAINTAIN_PROHIBITION = DeonticAtom("nm_fb", "not_maintain_prohibition")
-    NOT_ACHIEVE_PROHIBITION = DeonticAtom("na_fb", "not_achieve_prohibition")
+    CANCEL_MAINTAIN_PROHIBITION = DeonticAtom("cm_fb", "cancel_maintain_prohibition")
     MAINTAIN_DEFAULT_PROHIBITION = DeonticAtom("m_dfb", "maintain_default_prohibition")
+    CANCEL_MAINTAIN_DEFAULT_PROHIBITION = DeonticAtom("cm_dfb", "cancel_maintain_default_prohibition")
+    ACHIEVE_PROHIBITION = DeonticAtom("a_fb", "achieve_prohibition")
+    CANCEL_ACHIEVE_PROHIBITION = DeonticAtom("ca_fb", "cancel_achieve_prohibition")
+    # Omissions
     MAINTAIN_OMISSION = DeonticAtom("m_om", "maintain_omission")
+    CANCEL_MAINTAIN_OMISSION = DeonticAtom("cm_om", "cancel_maintain_omission")
+    MAINTAIN_DEFAULT_OMISSION = DeonticAtom("m_dom", "maintain_default_omission")
+    CANCEL_MAINTAIN_DEFAULT_OMISSION = DeonticAtom("cm_dom", "cancel_maintain_default_omission")
     ACHIEVE_OMISSION = DeonticAtom("a_om", "achieve_omission")
-
+    CANCEL_ACHIEVE_OMISSION = DeonticAtom("cm_aom", "cancel_achieve_omission")
 
     @classmethod
     def get_all(cls):
@@ -113,19 +128,29 @@ class DeonticAtoms(Enum):
         """Returns all the temporal names of the deontic atoms from the enum."""
         atoms = [
             DeonticAtoms.MAINTAIN_OBLIGATION,
-            DeonticAtoms.ACHIEVE_OBLIGATION,
-            DeonticAtoms.NOT_MAINTAIN_OBLIGATION,
-            DeonticAtoms.NOT_ACHIEVE_OBLIGATION,
+            DeonticAtoms.CANCEL_MAINTAIN_OBLIGATION,
             DeonticAtoms.MAINTAIN_DEFAULT_OBLIGATION,
+            DeonticAtoms.CANCEL_MAINTAIN_DEFAULT_OBLIGATION,
+            DeonticAtoms.ACHIEVE_OBLIGATION,
+            DeonticAtoms.CANCEL_ACHIEVE_OBLIGATION,
             DeonticAtoms.MAINTAIN_PERMISSION,
+            DeonticAtoms.CANCEL_MAINTAIN_PERMISSION,
+            DeonticAtoms.MAINTAIN_DEFAULT_PERMISSION,
+            DeonticAtoms.CANCEL_MAINTAIN_DEFAULT_PERMISSION,
             DeonticAtoms.ACHIEVE_PERMISSION,
+            DeonticAtoms.CANCEL_ACHIEVE_PERMISSION,
             DeonticAtoms.MAINTAIN_PROHIBITION,
-            DeonticAtoms.ACHIEVE_PROHIBITION,
-            DeonticAtoms.NOT_MAINTAIN_PROHIBITION,
-            DeonticAtoms.NOT_ACHIEVE_PROHIBITION,
+            DeonticAtoms.CANCEL_MAINTAIN_PROHIBITION,
             DeonticAtoms.MAINTAIN_DEFAULT_PROHIBITION,
+            DeonticAtoms.CANCEL_MAINTAIN_DEFAULT_PROHIBITION,
+            DeonticAtoms.ACHIEVE_PROHIBITION,
+            DeonticAtoms.CANCEL_ACHIEVE_PROHIBITION,
             DeonticAtoms.MAINTAIN_OMISSION,
-            DeonticAtoms.ACHIEVE_OMISSION
+            DeonticAtoms.CANCEL_MAINTAIN_OMISSION,
+            DeonticAtoms.MAINTAIN_DEFAULT_OMISSION,
+            DeonticAtoms.CANCEL_MAINTAIN_DEFAULT_OMISSION,
+            DeonticAtoms.ACHIEVE_OMISSION,
+            DeonticAtoms.CANCEL_ACHIEVE_OMISSION,
         ]
         names = [atom.value.prefixed() for atom in atoms]
         return names
@@ -182,8 +207,8 @@ def optional(deontic_atom):
     return DeonticAtoms.OPTIONAL.value.wrap(deontic_atom)
 
 
-def holds(deontic_atom):
-    return DeonticAtoms.HOLDS.value.wrap(deontic_atom)
+def holds(deontic_atom, prev=False, next=False):
+    return DeonticAtoms.HOLDS.value.wrap(deontic_atom, until=None, prev=prev, next=next)
 
 
 def permitted_implicitly(deontic_atom):
@@ -258,57 +283,105 @@ def default_prohibition(deontic_atom):
     return DeonticAtoms.DEFAULT_PROHIBITION.value.wrap(deontic_atom)
 
 
+# Temporal deontic atoms / Obligations
+
 def maintain_obligation(deontic_atom, until, prev=False, next=False):
     return DeonticAtoms.MAINTAIN_OBLIGATION.value.wrap(deontic_atom, until, prev=prev, next=next)
 
 
-def achieve_obligation(deontic_atom, until, prev=False, next=False):
-    return DeonticAtoms.ACHIEVE_OBLIGATION.value.wrap(deontic_atom, until, prev=prev, next=next)
-
-
-def not_maintain_obligation(deontic_atom, until, prev=False, next=False):
-    return DeonticAtoms.NOT_MAINTAIN_OBLIGATION.value.wrap(deontic_atom, until, prev=prev, next=next)
-
-
-def not_achieve_obligation(deontic_atom, until, prev=False, next=False):
-    return DeonticAtoms.NOT_ACHIEVE_OBLIGATION.value.wrap(deontic_atom, until, prev=prev, next=next)
+def cancel_maintain_obligation(deontic_atom, until, prev=False, next=False):
+    return DeonticAtoms.CANCEL_MAINTAIN_OBLIGATION.value.wrap(deontic_atom, until, prev=prev, next=next)
 
 
 def maintain_default_obligation(deontic_atom, until, prev=False, next=False):
     return DeonticAtoms.MAINTAIN_DEFAULT_OBLIGATION.value.wrap(deontic_atom, until, prev=prev, next=next)
 
 
+def cancel_maintain_default_obligation(deontic_atom, until, prev=False, next=False):
+    return DeonticAtoms.CANCEL_MAINTAIN_DEFAULT_OBLIGATION.value.wrap(deontic_atom, until, prev=prev, next=next)
+
+
+def achieve_obligation(deontic_atom, until, prev=False, next=False):
+    return DeonticAtoms.ACHIEVE_OBLIGATION.value.wrap(deontic_atom, until, prev=prev, next=next)
+
+
+def cancel_achieve_obligation(deontic_atom, until, prev=False, next=False):
+    return DeonticAtoms.CANCEL_ACHIEVE_OBLIGATION.value.wrap(deontic_atom, until, prev=prev, next=next)
+
+
+# Temporal deontic atoms / Permissions
+
 def maintain_permission(deontic_atom, until, prev=False, next=False):
     return DeonticAtoms.MAINTAIN_PERMISSION.value.wrap(deontic_atom, until, prev=prev, next=next)
+    
+
+def cancel_maintain_permission(deontic_atom, until, prev=False, next=False):
+    return DeonticAtoms.CANCEL_MAINTAIN_PERMISSION.value.wrap(deontic_atom, until, prev=prev, next=next)
+
+
+def maintain_default_permission(deontic_atom, until, prev=False, next=False):
+    return DeonticAtoms.MAINTAIN_DEFAULT_PERMISSION.value.wrap(deontic_atom, until, prev=prev, next=next)
+
+
+def cancel_maintain_default_permission(deontic_atom, until, prev=False, next=False):
+    return DeonticAtoms.CANCEL_MAINTAIN_DEFAULT_PERMISSION.value.wrap(deontic_atom, until, prev=prev, next=next)
 
 
 def achieve_permission(deontic_atom, until, prev=False, next=False):
     return DeonticAtoms.ACHIEVE_PERMISSION.value.wrap(deontic_atom, until, prev=prev, next=next)
 
 
+def cancel_achieve_permission(deontic_atom, until, prev=False, next=False):
+    return DeonticAtoms.CANCEL_ACHIEVE_PERMISSION.value.wrap(deontic_atom, until, prev=prev, next=next)
+
+
+# Temporal deontic atoms / Prohibitions
+
 def maintain_prohibition(deontic_atom, until, prev=False, next=False):
     return DeonticAtoms.MAINTAIN_PROHIBITION.value.wrap(deontic_atom, until, prev=prev, next=next)
 
 
-def achieve_prohibition(deontic_atom, until, prev=False, next=False):
-    return DeonticAtoms.ACHIEVE_PROHIBITION.value.wrap(deontic_atom, until, prev=prev, next=next)
-
-
-def not_maintain_prohibition(deontic_atom, until, prev=False, next=False):
-    return DeonticAtoms.NOT_MAINTAIN_PROHIBITION.value.wrap(deontic_atom, until, prev=prev, next=next)
-
-
-def not_achieve_prohibition(deontic_atom, until, prev=False, next=False):
-    return DeonticAtoms.NOT_ACHIEVE_PROHIBITION.value.wrap(deontic_atom, until, prev=prev, next=next)
+def cancel_maintain_prohibition(deontic_atom, until, prev=False, next=False):
+    return DeonticAtoms.CANCEL_MAINTAIN_PROHIBITION.value.wrap(deontic_atom, until, prev=prev, next=next)
 
 
 def maintain_default_prohibition(deontic_atom, until, prev=False, next=False):
     return DeonticAtoms.MAINTAIN_DEFAULT_PROHIBITION.value.wrap(deontic_atom, until, prev=prev, next=next)
 
 
+def cancel_maintain_default_prohibition(deontic_atom, until, prev=False, next=False):
+    return DeonticAtoms.CANCEL_MAINTAIN_DEFAULT_PROHIBITION.value.wrap(deontic_atom, until, prev=prev, next=next)
+
+
+def achieve_prohibition(deontic_atom, until, prev=False, next=False):
+    return DeonticAtoms.ACHIEVE_PROHIBITION.value.wrap(deontic_atom, until, prev=prev, next=next)
+
+
+def cancel_achieve_prohibition(deontic_atom, until, prev=False, next=False):
+    return DeonticAtoms.CANCEL_ACHIEVE_PROHIBITION.value.wrap(deontic_atom, until, prev=prev, next=next)
+
+
+# Temporal deontic atoms / Omissions
+
 def maintain_omission(deontic_atom, until, prev=False, next=False):
     return DeonticAtoms.MAINTAIN_OMISSION.value.wrap(deontic_atom, until, prev=prev, next=next)
 
 
+def cancel_maintain_omission(deontic_atom, until, prev=False, next=False):
+    return DeonticAtoms.CANCEL_MAINTAIN_OMISSION.value.wrap(deontic_atom, until, prev=prev, next=next)
+
+
+def maintain_default_omission(deontic_atom, until, prev=False, next=False):
+    return DeonticAtoms.MAINTAIN_DEFAULT_OMISSION.value.wrap(deontic_atom, until, prev=prev, next=next)
+
+
+def cancel_maintain_default_omission(deontic_atom, until, prev=False, next=False):
+    return DeonticAtoms.CANCEL_MAINTAIN_DEFAULT_OMISSION.value.wrap(deontic_atom, until, prev=prev, next=next)
+
+
 def achieve_omission(deontic_atom, until, prev=False, next=False):
     return DeonticAtoms.ACHIEVE_OMISSION.value.wrap(deontic_atom, until, prev=prev, next=next)
+
+
+def cancel_achieve_omission(deontic_atom, until, prev=False, next=False):
+    return DeonticAtoms.CANCEL_ACHIEVE_OMISSION.value.wrap(deontic_atom, until, prev=prev, next=next)

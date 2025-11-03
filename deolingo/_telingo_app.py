@@ -47,6 +47,25 @@ class DeolingoTelingoApp(telingo.TelApp):
             preprocessed_sources.append(src)
         return preprocessed_sources
 
+    @staticmethod
+    def get_deontic_atoms_to_print():
+        return [ "obligatory", "permitted", "forbidden", "omissible"] + DeolingoTelingoApp.get_temporal_deontic_atoms_to_print()
+    
+    @staticmethod
+    def get_temporal_deontic_atoms_to_print():
+        return [ "maintain_obligation", "cancel_maintain_obligation",
+                "maintain_default_obligation", "cancel_maintain_default_obligation",
+                "achieve_obligation", "cancel_achieve_obligation",
+                "maintain_permission", "cancel_maintain_permission",
+                "maintain_default_permission", "cancel_maintain_default_permission",
+                "achieve_permission", "cancel_achieve_permission",
+                "maintain_prohibition", "cancel_maintain_prohibition",
+                "maintain_default_prohibition", "cancel_maintain_default_prohibition",
+                "achieve_prohibition", "cancel_achieve_prohibition",
+                "maintain_omission", "cancel_maintain_omission",
+                "maintain_default_omission", "cancel_maintain_default_omission",
+                "achieve_omission", "cancel_achieve_omission", ]
+
     def print_model(self, model, printer):
         table = {}
         for sym in model.symbols(shown=True):
@@ -64,9 +83,14 @@ class DeolingoTelingoApp(telingo.TelApp):
                     # extract the first match group of the pattern from sym
                     m = re.match(pattern, str(sym))
                     if m is not None:
-                        if m.group(2) in ["obligatory", "permitted", "forbidden", "omissible"]\
-                                and m.group(1) != "-" and not m.group(3).startswith('-'):
-                            sym = re.sub(pattern, r"\1&\2{\3}", str(sym))
+                        if m.group(2) in self.get_deontic_atoms_to_print() and m.group(1) != "-":
+                            if m.group(2) in self.get_temporal_deontic_atoms_to_print():
+                                npattern = "^(-?)" + _DEOLINGO_ATOM_PREFIX + r"(\w+)\((.+),(.+)\)$"
+                                sym = re.sub(npattern, r"\1&\2(\4){\3}", str(sym))
+                            else:
+                                if m.group(3).startswith('-'):
+                                    continue
+                                sym = re.sub(pattern, r"\1&\2{\3}", str(sym))
                             sys.stdout.write("\n ")
                             sys.stdout.write(" {}".format(sym))
                         if m.group(2) == "inconsistency":

@@ -1,5 +1,5 @@
 
-% Cancellation of Temporal Obligations.
+% Cancellation of Temporal Obligations (I).
 
 #program always.
 
@@ -13,8 +13,8 @@
 &forbidden{report} :- &violated_obligation{quarantine}.
 
 % (E) If the lockdown ends (le), the obligations to remain in quarantine and report your quarantine are canceled.
-&not_maintain_obligation(negative){quarantine} :- lockdown_ends.
-&not_achieve_obligation(negative){report} :- lockdown_ends.
+&cancel_maintain_obligation(negative){quarantine} :- lockdown_ends.
+&cancel_achieve_obligation(negative){report} :- lockdown_ends.
 
 #program initial.
 

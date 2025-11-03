@@ -17,7 +17,8 @@
 &tel {
     &true
     ;> quarantine & positive
-    ;> -quarantine
+    ;> quarantine & report
+    ;> quarantine
     ;> negative
     ;> &true
 }.

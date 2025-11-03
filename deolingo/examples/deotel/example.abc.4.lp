@@ -1,5 +1,5 @@
 
-% Constitutive Norms (II).
+% Temporal CTDs and Dilemmas (IV).
 
 #program always.
 
@@ -12,18 +12,12 @@
 % (C) While you are violating an obligation to quarantine, it is forbidden to report you are in quarantine.
 &forbidden{report} :- &violated_obligation{quarantine}.
 
-% A quarantine counts as a confinement.
-confinement :- quarantine.
-&obligatory{confinement} :- &obligatory{quarantine}.
--confinement :- -quarantine.
-&obligatory{-confinement} :- &obligatory{-quarantine}.
-
 #program initial.
 
 &tel {
     &true
     ;> quarantine & positive
-    ;> quarantine
+    ;> -quarantine & -report
     ;> negative
     ;> &true
 }.
