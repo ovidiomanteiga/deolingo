@@ -30,7 +30,7 @@ class DeolingoTelingoApp(telingo.TelApp):
         with tempfile.NamedTemporaryFile(mode="w+t", delete=False) as temp_file:
             temp_file.write(translated_program)
             temp_file.seek(0)  # Rewind to the beginning of the file
-            clingo.clingo_main(self, [temp_file.name])
+            clingo.clingo_main(self, [sys.argv[1]]+[temp_file.name])
             temp_file.close()  # Important: close the file first to release the handle
             import os
             os.remove(temp_file.name)
@@ -55,7 +55,7 @@ class DeolingoTelingoApp(telingo.TelApp):
     def get_temporal_deontic_atoms_to_print():
         return [ "maintain_obligation", "cancel_maintain_obligation",
                 "maintain_default_obligation", "cancel_maintain_default_obligation",
-                "achieve_obligation", "cancel_achieve_obligation",
+                "achieve_default_obligation", "cancel_achieve_default_obligation",
                 "maintain_permission", "cancel_maintain_permission",
                 "maintain_default_permission", "cancel_maintain_default_permission",
                 "achieve_permission", "cancel_achieve_permission",
